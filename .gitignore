@@ -1,0 +1,12 @@
+# Fichiers Python/Django
+backend/venv/
+backend/__pycache__/
+backend/db.sqlite3
+backend/.env
+
+# Fichiers Node.js/React
+frontend/node_modules/
+frontend/dist/
+frontend/.env*
+frontend/.DS_Store
+*.log
