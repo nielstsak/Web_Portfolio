@@ -1,12 +1,50 @@
-# Fichiers Python/Django
-backend/venv/
-backend/__pycache__/
-backend/db.sqlite3
-backend/.env
+# Fichiers de configuration et secrets
+# NE JAMAIS versionner les secrets
+.env
+.env.*
+*.env
 
-# Fichiers Node.js/React
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Fichiers IDE
+.vscode/
+.idea/
+
+# --- Backend (Python/Django) ---
+
+# Environnement virtuel
+backend/venv/
+
+# Cache Python
+backend/__pycache__/
+backend/api/__pycache__/
+backend/api/migrations/__pycache__/
+backend/core/__pycache__/
+*.pyc
+
+# Base de données locale
+backend/db.sqlite3
+
+# Média (fichiers uploadés par l'utilisateur)
+# Ces fichiers doivent être servis par un service de stockage (ex: S3) en production
+backend/media/
+
+# Dépendances Node (si présentes dans le backend)
+backend/node_modules/
+backend/package-lock.json
+
+# --- Frontend (React/Vite) ---
+
+# Dépendances
 frontend/node_modules/
+
+# Fichiers de build (production)
 frontend/dist/
-frontend/.env*
-frontend/.DS_Store
-*.log
+frontend/.vite/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
