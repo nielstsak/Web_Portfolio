@@ -9,14 +9,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 
-# DEBUG est True localement, False sur Render (via la variable RENDER)
-DEBUG = 'RENDER' not in os.environ
+# Lit la variable DEBUG. Si elle n'est pas définie, DEBUG est False.
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = []
 
-RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
-if RENDER_EXTERNAL_HOSTNAME:
-    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+# Variable générique pour l'hôte de production (Koyeb, Render, etc.)
+APP_HOSTNAME = os.environ.get('APP_HOSTNAME')
+if APP_HOSTNAME:
+    ALLOWED_HOSTS.append(APP_HOSTNAME)
 
 
 INSTALLED_APPS = [
@@ -88,7 +89,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Autoriser le frontend Vercel à appeler cette API
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173", # Pour le développement local
+    "http://localhost:5173",
 ]
 VERCEL_FRONTEND_URL = os.environ.get('VERCEL_FRONTEND_URL')
 if VERCEL_FRONTEND_URL:
