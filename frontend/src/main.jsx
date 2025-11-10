@@ -4,12 +4,19 @@
 
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import './index.css';
-import App from './App.jsx';
+import './index.css'; // Importe les styles globaux
+import App from './App.jsx'; // Importe le composant racine
 
-// Rend le composant principal <App> dans l'élément DOM avec l'ID 'root'.
-createRoot(document.getElementById('root')).render(
-  // StrictMode active des vérifications supplémentaires pour détecter les problèmes potentiels.
+// Cible l'élément DOM avec l'ID 'root' (défini dans index.html)
+const conteneurRoot = document.getElementById('root');
+
+// Crée la racine React pour le rendu de l'application
+const root = createRoot(conteneurRoot);
+
+// Rend le composant principal <App> dans la racine.
+root.render(
+  // StrictMode active des vérifications supplémentaires en développement 
+  // pour détecter les problèmes potentiels (ex: effets de bord).
   <StrictMode>
     <App />
   </StrictMode>,

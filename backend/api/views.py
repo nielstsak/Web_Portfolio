@@ -8,7 +8,7 @@ from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import (
-    Project,
+    Projet,
     Presentation,
     PosteCible,
     Diplome,
@@ -16,7 +16,7 @@ from .models import (
     Parcours,
 )
 from .serializers import (
-    ProjectSerializer,
+    ProjetSerializer,
     PresentationSerializer,
     PosteCibleSerializer,
     DiplomeSerializer,
@@ -24,96 +24,100 @@ from .serializers import (
     ParcoursSerializer,
 )
 
-class ProjectViewSet(viewsets.ReadOnlyModelViewSet):
+class ProjetViewSet(viewsets.ReadOnlyModelViewSet):
     """ViewSet pour les projets, avec des actions personnalisées pour le code source."""
-    queryset = Project.objects.all()
-    serializer_class = ProjectSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    queryset = Projet.objects.all()
+    serializer_class = ProjetSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly] # Lecture seule pour les non-authentifiés
 
-    def get_cache_dir(self, project_id):
+    def obtenir_repertoire_cache(self, id_projet):
         """Crée et retourne le chemin du répertoire de cache pour un projet donné."""
-        cache_path = Path(settings.MEDIA_ROOT) / 'zip_cache' / str(project_id)
-        cache_path.mkdir(parents=True, exist_ok=True)
-        return cache_path
+        chemin_cache = Path(settings.MEDIA_ROOT) / 'zip_cache' / str(id_projet)
+        chemin_cache.mkdir(parents=True, exist_ok=True) # Crée le dossier s'il n'existe pas
+        return chemin_cache
 
-    def extract_zip_if_needed(self, project):
+    def extraire_zip_si_necessaire(self, projet):
         """Extrait le fichier ZIP du code source dans un répertoire de cache, si nécessaire."""
-        cache_dir = self.get_cache_dir(project.id)
-        if not any(cache_dir.iterdir()):
+        repertoire_cache = self.obtenir_repertoire_cache(projet.id)
+        
+        # N'extrait que si le dossier de cache est vide
+        if not any(repertoire_cache.iterdir()):
             try:
-                with zipfile.ZipFile(project.source_code_zip.file, 'r') as zip_ref:
-                    zip_ref.extractall(cache_dir)
+                with zipfile.ZipFile(projet.zip_code_source.file, 'r') as fichier_zip:
+                    fichier_zip.extractall(repertoire_cache)
             except Exception as e:
                 raise IOError(f"Échec de l'extraction du fichier zip : {str(e)}")
-        return cache_dir
+        return repertoire_cache
 
     @action(detail=True, methods=['get'], url_path='source-code-tree')
-    def source_code_tree(self, request, pk=None):
+    def arborescence_code_source(self, requete, pk=None):
         """Action personnalisée pour lister l'arborescence des fichiers du code source."""
-        project = self.get_object()
-        if not project.source_code_zip:
+        projet = self.get_object()
+        if not projet.zip_code_source:
             return Response({"error": "Aucun fichier zip de code source disponible."}, status=status.HTTP_404_NOT_FOUND)
 
         try:
-            cache_dir = self.extract_zip_if_needed(project)
+            repertoire_cache = self.extraire_zip_si_necessaire(projet)
         except IOError as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
-        # --- Construction d'une arborescence (dictionnaire imbriqué) à partir des chemins ---
-        root = {}
-        for path in sorted(cache_dir.rglob('*')):
-            if '.DS_Store' in str(path) :
+        # --- Construction de l'arborescence (dictionnaire imbriqué) ---
+        racine = {}
+        for chemin in sorted(repertoire_cache.rglob('*')):
+            if '.DS_Store' in str(chemin) : # Ignore les fichiers système
                 continue
             
-            parts = path.relative_to(cache_dir).parts
-            current_level = root
-            for part in parts[:-1]:
-                current_level = current_level.setdefault(part, {})
-            if path.is_file():
-                current_level[parts[-1]] = parts[-1]
+            segments = chemin.relative_to(repertoire_cache).parts
+            niveau_actuel = racine
+            for segment in segments[:-1]:
+                niveau_actuel = niveau_actuel.setdefault(segment, {})
+            if chemin.is_file():
+                niveau_actuel[segments[-1]] = segments[-1]
         
-        def build_tree(d, path_prefix=''):
-            """Fonction  pour convertir le dictionnaire en une liste ."""
-            result = []
-            for k, v in d.items():
-                current_path = f"{path_prefix}{k}"
-                node = {'name': k, 'path': current_path}
-                if isinstance(v, dict):
-                    node['type'] = 'directory'
-                    node['children'] = build_tree(v, f"{current_path}/")
-                else:
-                    node['type'] = 'file'
-                result.append(node)
-            return sorted(result, key=lambda x: (x['type'] == 'file', x['name']))
+        def construire_arborescence(d, prefixe_chemin=''):
+            """Fonction récursive pour formater l'arborescence en liste."""
+            resultat = []
+            for cle, valeur in d.items():
+                chemin_actuel = f"{prefixe_chemin}{cle}"
+                noeud = {'name': cle, 'path': chemin_actuel}
+                if isinstance(valeur, dict): # Dossier
+                    noeud['type'] = 'directory'
+                    noeud['children'] = construire_arborescence(valeur, f"{chemin_actuel}/")
+                else: # Fichier
+                    noeud['type'] = 'file'
+                resultat.append(noeud)
+            # Trie pour afficher les dossiers avant les fichiers
+            return sorted(resultat, key=lambda x: (x['type'] == 'file', x['name']))
 
-        tree = build_tree(root)
-        return Response(tree)
+        arborescence = construire_arborescence(racine)
+        return Response(arborescence)
 
     @action(detail=True, methods=['get'], url_path='source-code-file')
-    def source_code_file(self, request, pk=None):
+    def fichier_code_source(self, requete, pk=None):
         """Récupérer le contenu d'un fichier source spécifique."""
-        project = self.get_object()
-        file_path_str = request.query_params.get('path')
+        projet = self.get_object()
+        chemin_fichier_str = requete.query_params.get('path')
 
-        if not file_path_str:
+        if not chemin_fichier_str:
             return Response({"error": "Le paramètre 'path' du fichier est requis."}, status=status.HTTP_400_BAD_REQUEST)
 
-        if not project.source_code_zip:
+        if not projet.zip_code_source:
             return Response({"error": "Aucun fichier zip de code source disponible."}, status=status.HTTP_404_NOT_FOUND)
 
         try:
-            cache_dir = self.extract_zip_if_needed(project)
+            repertoire_cache = self.extraire_zip_si_necessaire(projet)
         except IOError as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        target_file = cache_dir.joinpath(file_path_str).resolve()
-        # Mesure de sécurité pour empêcher l'accès à des fichiers hors du répertoire de cache (Path Traversal).
-        if not target_file.is_file() or not str(target_file).startswith(str(cache_dir.resolve())):
+        fichier_cible = repertoire_cache.joinpath(chemin_fichier_str).resolve()
+        
+        # Sécurité : empêche l'accès à des fichiers hors du répertoire de cache (Path Traversal)
+        if not fichier_cible.is_file() or not str(fichier_cible).startswith(str(repertoire_cache.resolve())):
             return Response({"error": "Fichier non trouvé ou accès refusé."}, status=status.HTTP_404_NOT_FOUND)
         
         try:
-            content = target_file.read_text(encoding='utf-8', errors='ignore')
-            return Response({'path': file_path_str, 'content': content})
+            contenu = fichier_cible.read_text(encoding='utf-8', errors='ignore')
+            return Response({'path': chemin_fichier_str, 'content': contenu})
         except Exception as e:
             return Response({"error": f"Échec de la lecture du fichier : {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

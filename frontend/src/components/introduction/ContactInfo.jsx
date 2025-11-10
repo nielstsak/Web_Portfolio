@@ -9,19 +9,19 @@ import { Box, Typography, Avatar, Link, Grid, List, ListItem, ListItemText } fro
  * postes: Array<{id: number, nom: string}>
  * }} props
  */
-const ContactInfo = ({ presentation, postes }) => (
+const InfosContact = ({ presentation, postes }) => (
   // La grille principale divise la section en deux : contact à gauche, postes à droite.
   <Grid container spacing={4} alignItems="center">
     
     {/* Partie Gauche : Photo, Nom, Email */}
-    <Grid item size={{ xs: 12, md: 7 }}>
+    <Grid item xs={12} md={7}>
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
         {presentation?.photo && (
           <Avatar
             src={presentation.photo}
             alt={`${presentation?.prenom} ${presentation?.nom}`}
             variant="rounded"
-            sx={{ width: 100, height: 100, mr: 2.5 }}
+            sx={{ width: 100, height: 100, mr: 2.5 }} // Marge à droite
           />
         )}
         <Box>
@@ -36,11 +36,11 @@ const ContactInfo = ({ presentation, postes }) => (
     </Grid>
 
     {/* Partie Droite : Postes ciblés */}
-    <Grid item size={{ xs: 12, md: 5 }}>
+    <Grid item xs={12} md={5}>
       <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
         Postes ciblés
       </Typography>
-      <List dense>
+      <List dense> {/* 'dense' réduit l'espacement de la liste */}
         {postes.map((poste) => (
           <ListItem key={poste.id} sx={{ p: 0 }}>
             <ListItemText primary={poste.nom} />
@@ -52,4 +52,4 @@ const ContactInfo = ({ presentation, postes }) => (
   </Grid>
 );
 
-export default ContactInfo;
+export default InfosContact;

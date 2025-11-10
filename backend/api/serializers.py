@@ -1,57 +1,56 @@
 # backend\api\serializers.py
 from rest_framework import serializers
 from .models import (
-    Project,
+    Projet,
     Presentation,
     PosteCible,
     Diplome,
     CompetenceTechnologique,
     Parcours,
-    WorkDone,
+    TravailEffectue,
 )
 
 class CompetenceTechnologiqueSerializer(serializers.ModelSerializer):
     """Sérialiseur pour le modèle CompetenceTechnologique."""
-    # S'assure que l'URL complète du fichier est retournée dans l'API.
+    # Retourne l'URL complète du fichier, plutôt que juste le chemin.
     logo = serializers.FileField(use_url=True)
 
     class Meta:
         model = CompetenceTechnologique
         fields = ['id', 'nom', 'logo']
 
-class WorkDoneSerializer(serializers.ModelSerializer):
+class TravailEffectueSerializer(serializers.ModelSerializer):
     """Sérialiseur pour les tâches effectuées au sein d'un projet."""
     class Meta:
-        model = WorkDone
-        fields = ['id', 'subtitle', 'description']
+        model = TravailEffectue
+        fields = ['id', 'sous_titre', 'description']
 
-class ProjectSerializer(serializers.ModelSerializer):
-    """Sérialiseur pour le modèle Project, incluant ses relations."""
+class ProjetSerializer(serializers.ModelSerializer):
+    """Sérialiseur pour le modèle Projet, incluant ses relations."""
     # Imbrique les données complètes des technologies associées.
     technologies = CompetenceTechnologiqueSerializer(many=True, read_only=True)
-    # Imbrique les données complètes des tâches effectuées.
-    work_done = WorkDoneSerializer(many=True, read_only=True)
+    # Imbrique les données des tâches via le 'related_name' défini dans le modèle TravailEffectue.
+    travaux_effectues = TravailEffectueSerializer(many=True, read_only=True)
 
     class Meta:
-        model = Project
+        model = Projet
         fields = [
             'id', 
-            'title', 
+            'titre', 
             'video', 
             'description',
             'tasks_effectuees',
             'technologies',
-            'work_done'
+            'travaux_effectues' # Doit correspondre au champ défini ci-dessus
         ]
 
 class PresentationSerializer(serializers.ModelSerializer):
     """Sérialiseur pour le modèle Presentation."""
-    # S'assure que l'URL complète de la photo est retournée.
     photo = serializers.FileField(use_url=True)
 
     class Meta:
         model = Presentation
-        fields = '__all__'
+        fields = '__all__' # Inclut tous les champs du modèle
 
 class PosteCibleSerializer(serializers.ModelSerializer):
     """Sérialiseur pour le modèle PosteCible."""

@@ -5,34 +5,35 @@ import { AppBar, Toolbar, Typography, Box, Button, Container } from '@mui/materi
 /**
  * Barre de navigation principale du site.
  * @param {{
- * onNavigate: function,
- * activeSection: string
+ * onNaviguer: function,
+ * sectionActive: string
  * }} props
  */
-function Navbar({ onNavigate, activeSection }) {
+function Navbar({ onNaviguer, sectionActive }) {
   return (
     <AppBar
       position="sticky"
       sx={{
         top: 0,
-        backgroundColor: 'rgba(255, 255, 255, 0.8)',
-        backdropFilter: 'blur(10px)',
-        boxShadow: 'inset 0px -1px 1px #e7e7e7',
+        backgroundColor: 'rgba(255, 255, 255, 0.8)', // Fond blanc semi-transparent
+        backdropFilter: 'blur(10px)', // Effet de flou
+        boxShadow: 'inset 0px -1px 1px #e7e7e7', // Ombre intérieure subtile
         zIndex: 1200,
       }}
     >
       <Container minwidth="100%" sx={{ px: { xs: 2, md: 6 } }}>
         <Toolbar disableGutters>
+          {/* Titre/Logo cliquable pour revenir à l'introduction */}
           <Typography
             variant="h6"
             component="a"
             href="#"
             onClick={(e) => {
               e.preventDefault();
-              if (onNavigate) onNavigate('introduction');
+              if (onNaviguer) onNaviguer('introduction');
             }}
             sx={{
-              flexGrow: 1,
+              flexGrow: 1, // Pousse les boutons vers la droite
               color: 'text.primary',
               textDecoration: 'none',
               fontWeight: 'bold',
@@ -40,22 +41,25 @@ function Navbar({ onNavigate, activeSection }) {
           >
             Mon Portfolio
           </Typography>
+          
+          {/* Liens de navigation */}
           <Box>
             <Button
-              onClick={() => onNavigate && onNavigate('introduction')}
+              onClick={() => onNaviguer && onNaviguer('introduction')}
               sx={{
-                color: activeSection === 'introduction' ? 'text.primary' : 'text.secondary',
-                fontWeight: activeSection === 'introduction' ? 'bold' : 'normal',
+                // Style dynamique basé sur la section active
+                color: sectionActive === 'introduction' ? 'text.primary' : 'text.secondary',
+                fontWeight: sectionActive === 'introduction' ? 'bold' : 'normal',
                 '&:hover': { color: 'text.primary' },
               }}
             >
               Introduction
             </Button>
             <Button
-              onClick={() => onNavigate && onNavigate('projects')}
+              onClick={() => onNaviguer && onNaviguer('projects')}
               sx={{
-                color: activeSection === 'projects' ? 'text.primary' : 'text.secondary',
-                fontWeight: activeSection === 'projects' ? 'bold' : 'normal',
+                color: sectionActive === 'projects' ? 'text.primary' : 'text.secondary',
+                fontWeight: sectionActive === 'projects' ? 'bold' : 'normal',
                 '&:hover': { color: 'text.primary' },
               }}
             >

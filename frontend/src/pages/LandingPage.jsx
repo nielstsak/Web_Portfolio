@@ -6,14 +6,14 @@ import { Box } from '@mui/material';
 import { AnimatePresence, motion } from 'framer-motion';
 import Introduction from '../components/Introduction';
 import Parcours from '../components/Parcours';
-import ProjectList from '../components/ProjectList';
+import ListeProjets from '../components/ProjectList'; // Renommé depuis ProjectList
 import { useAppStore } from '../store/appStore';
 
 // Ordre de navigation des sections pour le défilement.
 const sections = ['introduction', 'parcours', 'projects'];
 
 // Variantes d'animation pour la transition entre les sections.
-const sectionVariants = {
+const variantsSection = {
   initial: { opacity: 0, y: 20 },
   enter: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.4, 0, 0.2, 1] } },
   exit: { opacity: 0, y: -20, transition: { duration: 0.5, ease: [0.4, 0, 0.2, 1] } },
@@ -21,52 +21,52 @@ const sectionVariants = {
 
 /**
  * Page d'accueil qui gère l'affichage et la navigation entre les sections principales.
- * @param {{ activeSection: string, onNavigate: function }} props
+ * @param {{ sectionActive: string, onNaviguer: function }} props
  */
-function LandingPage({ activeSection, onNavigate }) {
-  const navigate = useNavigate();
-  const projects = useAppStore((state) => state.projects);
-  const parcoursData = useAppStore((state) => state.parcoursData);
+function LandingPage({ sectionActive, onNaviguer }) {
+  const navigation = useNavigate();
+  const projets = useAppStore((state) => state.projects);
+  const donneesParcours = useAppStore((state) => state.parcoursData);
   
-  const lastCall = useRef(0);
-  const throttleDelay = 1000; // Délai en ms pour limiter la fréquence de changement de section.
+  const dernierAppel = useRef(0);
+  const delaiAntiRebond = 1000; // Délai (ms) pour limiter la fréquence de changement de section
 
-  const handleSelectProject = (projectId) => {
-    navigate(`/project/${projectId}`);
+  const gererSelectionProjet = (idProjet) => {
+    navigation(`/project/${idProjet}`);
   };
 
   // Gère la navigation entre les sections avec la molette de la souris.
-  const handleWheel = useCallback((event) => {
-    const now = Date.now();
+  const gererDefilement = useCallback((evenement) => {
+    const maintenant = Date.now();
     // "Throttle" : Empêche les changements de section trop rapides.
-    if (now - lastCall.current < throttleDelay) {
+    if (maintenant - dernierAppel.current < delaiAntiRebond) {
       return;
     }
-    lastCall.current = now;
+    dernierAppel.current = maintenant;
 
-    const currentIndex = sections.indexOf(activeSection);
-    if (event.deltaY > 0 && currentIndex < sections.length - 1) { // Scroll vers le bas
-      onNavigate(sections[currentIndex + 1]);
-    } else if (event.deltaY < 0 && currentIndex > 0) { // Scroll vers le haut
-      onNavigate(sections[currentIndex - 1]);
+    const indexActuel = sections.indexOf(sectionActive);
+    if (evenement.deltaY > 0 && indexActuel < sections.length - 1) { // Scroll vers le bas
+      onNaviguer(sections[indexActuel + 1]);
+    } else if (evenement.deltaY < 0 && indexActuel > 0) { // Scroll vers le haut
+      onNaviguer(sections[indexActuel - 1]);
     }
-  }, [activeSection, onNavigate, throttleDelay]);
+  }, [sectionActive, onNaviguer, delaiAntiRebond]);
 
   // Ajoute et retire l'écouteur d'événement pour le défilement.
   useEffect(() => {
-    window.addEventListener('wheel', handleWheel);
-    return () => window.removeEventListener('wheel', handleWheel);
-  }, [handleWheel]);
+    window.addEventListener('wheel', gererDefilement);
+    return () => window.removeEventListener('wheel', gererDefilement);
+  }, [gererDefilement]);
 
   // Rend le composant de la section active.
-  const renderSectionContent = () => {
-    switch (activeSection) {
+  const afficherContenuSection = () => {
+    switch (sectionActive) {
       case 'introduction':
-        return <Introduction isVisible={true} />;
+        return <Introduction estVisible={true} />;
       case 'parcours':
-        return <Parcours parcoursData={parcoursData} />;
+        return <Parcours donneesParcours={donneesParcours} />;
       case 'projects':
-        return <ProjectList projects={projects} onSelectProject={handleSelectProject} />;
+        return <ListeProjets projets={projets} onSelectionnerProjet={gererSelectionProjet} />;
       default:
         return null;
     }
@@ -74,19 +74,18 @@ function LandingPage({ activeSection, onNavigate }) {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, overflow: 'hidden' }}>
-      {/* Gère l'animation de sortie de l'ancienne section et d'entrée de la nouvelle. */}
+      {/* Gère l'animation de sortie (exit) et d'entrée (enter) */}
       <AnimatePresence mode="wait">
         <motion.div
-          // La clé est cruciale pour que AnimatePresence détecte le changement de composant.
-          key={activeSection}
-          variants={sectionVariants}
+          // La clé 'key' est cruciale : elle dit à AnimatePresence que le composant a changé.
+          key={sectionActive}
+          variants={variantsSection}
           initial="initial"
           animate="enter"
           exit="exit"
-          // Le conteneur doit être flex pour permettre à son enfant (ex: Introduction) de grandir.
           style={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}
         >
-          {renderSectionContent()}
+          {afficherContenuSection()}
         </motion.div>
       </AnimatePresence>
     </Box>

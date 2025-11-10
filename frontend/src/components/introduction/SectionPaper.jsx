@@ -4,21 +4,22 @@ import { Paper } from '@mui/material';
 import { motion } from 'framer-motion';
 
 // Variante d'animation pour l'apparition des blocs de section.
-const itemVariants = {
+const variantsElement = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
 };
 
 /**
- * Composant réutilisable qui enveloppe une section dans un Paper de MUI
+ * Composant réutilisable qui enveloppe une section dans un 'Paper' (carte) MUI
  * et ajoute des animations avec Framer Motion.
  * @param {{ children: React.ReactNode }} props
  */
 const SectionPaper = ({ children }) => (
   <motion.div
-    variants={itemVariants}
+    variants={variantsElement}
+    // Ajoute un effet de "soulèvement" au survol
     whileHover={{ y: -8, transition: { type: 'spring', stiffness: 300 } }}
-    style={{ height: '100%' }}
+    style={{ height: '100%' }} // S'assure que le 'Paper' remplit la grille
   >
     <Paper
       elevation={2}

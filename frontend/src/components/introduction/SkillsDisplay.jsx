@@ -10,13 +10,13 @@ import { motion } from 'framer-motion';
  * competences: Array<{id: number, nom: string, logo: string}>
  * }} props
  */
-const SkillsDisplay = ({ diplomes, competences }) => (
+const AffichageCompetences = ({ diplomes, competences }) => (
   <>
     {/* Section des diplômes */}
     <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>
       Diplômes
     </Typography>
-    <List dense>
+    <List dense> {/* 'dense' réduit la hauteur des éléments de la liste */}
       {diplomes.map((diplome) => (
         <ListItem key={diplome.id} sx={{ p: 0 }}>
           <ListItemText primary={diplome.titre} secondary={diplome.institution} />
@@ -30,13 +30,15 @@ const SkillsDisplay = ({ diplomes, competences }) => (
     </Typography>
     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
       {competences.map((competence) => (
+        // 'Tooltip' affiche le nom de la compétence au survol
         <Tooltip title={competence.nom} key={competence.id} arrow>
+          {/* Animation de survol sur chaque logo */}
           <motion.div whileHover={{ scale: 1.15, rotate: 5, transition: { type: 'spring', stiffness: 400 } }}>
             <Box
               component="img"
               src={competence.logo}
               alt={competence.nom}
-              loading="lazy"
+              loading="lazy" // Chargement différé des images
               sx={{
                 height: '5vh',
                 width: '5vh',
@@ -50,4 +52,4 @@ const SkillsDisplay = ({ diplomes, competences }) => (
   </>
 );
 
-export default SkillsDisplay;
+export default AffichageCompetences;

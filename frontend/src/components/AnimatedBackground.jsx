@@ -7,102 +7,109 @@ import { useRef, useEffect } from 'react';
  * qui réagissent à la position du curseur de la souris.
  */
 const AnimatedBackground = () => {
-  const canvasRef = useRef(null);
-  const stateRef = useRef({
-    mouse: { x: -1000, y: -1000 },
-    dots: [],
+  // Références React pour accéder au canevas et à l'état interne (mutable)
+  const refCanevas = useRef(null);
+  const refEtat = useRef({
+    souris: { x: -1000, y: -1000 }, // Position initiale hors écran
+    points: [],
   });
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+    const canevas = refCanevas.current;
+    if (!canevas) return;
+    const contexte = canevas.getContext('2d');
 
     // Initialise la grille de points en fonction de la taille de la fenêtre.
-    const setupGrid = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+    const configurerGrille = () => {
+      canevas.width = window.innerWidth;
+      canevas.height = window.innerHeight;
 
-      stateRef.current.dots = [];
-      const gridSize = 20; 
-      const cols = Math.ceil(canvas.width / gridSize);
-      const rows = Math.ceil(canvas.height / gridSize);
+      refEtat.current.points = [];
+      const tailleGrille = 20; 
+      const colonnes = Math.ceil(canevas.width / tailleGrille);
+      const rangees = Math.ceil(canevas.height / tailleGrille);
 
-      for (let i = 0; i < cols; i++) {
-        for (let j = 0; j < rows; j++) {
-          const x = i * gridSize + gridSize / 2;
-          const y = j * gridSize + gridSize / 2;
-          stateRef.current.dots.push({ x, y });
+      // Crée un point pour chaque intersection de la grille
+      for (let i = 0; i < colonnes; i++) {
+        for (let j = 0; j < rangees; j++) {
+          const x = i * tailleGrille + tailleGrille / 2;
+          const y = j * tailleGrille + tailleGrille / 2;
+          refEtat.current.points.push({ x, y });
         }
       }
     };
 
-    // --- Boucle d'animation principale ---
-    let animationFrameId;
-    const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+    // --- Boucle d'animation principale (appelée à chaque frame) ---
+    let idAnimation;
+    const animer = () => {
+      // Nettoie le canevas
+      contexte.clearRect(0, 0, canevas.width, canevas.height);
+      contexte.fillStyle = 'rgba(0, 0, 0, 0.85)';
       
-      const { dots, mouse } = stateRef.current;
-      const baseRadius = 1;
-      const maxRadius = 3;
-      const influenceRadius = 150;
+      const { points, souris } = refEtat.current;
+      const rayonBase = 1;
+      const rayonMax = 3;
+      const rayonInfluence = 150; // Zone d'effet de la souris
 
-      dots.forEach(dot => {
-        const dx = dot.x - mouse.x;
-        const dy = dot.y - mouse.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
+      points.forEach(point => {
+        const deltaX = point.x - souris.x;
+        const deltaY = point.y - souris.y;
+        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
-        const falloff = 1 - Math.min(distance / influenceRadius, 1);
-        const radius = baseRadius + (maxRadius - baseRadius) * Math.pow(falloff, 2);
+        // Calcule l'atténuation : 1 (proche) à 0 (loin)
+        const attenuation = 1 - Math.min(distance / rayonInfluence, 1);
+        // Le rayon du point grossit exponentiellement à mesure qu'il est proche
+        const rayon = rayonBase + (rayonMax - rayonBase) * Math.pow(attenuation, 2);
 
-        ctx.beginPath();
-        ctx.arc(dot.x, dot.y, radius, 0, 2 * Math.PI);
-        ctx.fill();
+        // Dessine le point
+        contexte.beginPath();
+        contexte.arc(point.x, point.y, rayon, 0, 2 * Math.PI);
+        contexte.fill();
       });
 
-      animationFrameId = requestAnimationFrame(animate);
+      idAnimation = requestAnimationFrame(animer);
     };
 
     // --- Gestionnaires d'événements ---
-    const handleMouseMove = (event) => {
-      stateRef.current.mouse.x = event.clientX;
-      stateRef.current.mouse.y = event.clientY;
+    const gererMouvementSouris = (evenement) => {
+      refEtat.current.souris.x = evenement.clientX;
+      refEtat.current.souris.y = evenement.clientY;
     };
     
     // Réinitialise la position de la souris lorsque le curseur quitte la fenêtre.
-    const handleMouseLeave = () => {
-      stateRef.current.mouse.x = -1000;
-      stateRef.current.mouse.y = -1000;
+    const gererSortieSouris = () => {
+      refEtat.current.souris.x = -1000;
+      refEtat.current.souris.y = -1000;
     };
 
-    const handleResize = () => {
-      setupGrid();
+    const gererRedimensionnement = () => {
+      configurerGrille();
     };
 
     // --- Initialisation et Nettoyage ---
-    setupGrid();
-    animate();
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('resize', handleResize);
-    document.addEventListener('mouseleave', handleMouseLeave);
+    configurerGrille();
+    animer();
+    window.addEventListener('mousemove', gererMouvementSouris);
+    window.addEventListener('resize', gererRedimensionnement);
+    document.addEventListener('mouseleave', gererSortieSouris);
 
+    // Fonction de nettoyage appelée lors du démontage du composant
     return () => {
-      cancelAnimationFrame(animationFrameId);
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('resize', handleResize);
-      document.removeEventListener('mouseleave', handleMouseLeave);
+      cancelAnimationFrame(idAnimation);
+      window.removeEventListener('mousemove', gererMouvementSouris);
+      window.removeEventListener('resize', gererRedimensionnement);
+      document.removeEventListener('mouseleave', gererSortieSouris);
     };
   }, []); // Le tableau vide assure que l'effet ne s'exécute qu'une seule fois.
 
   return (
     <canvas
-      ref={canvasRef}
+      ref={refCanevas}
       style={{
         position: 'fixed',
         top: 0,
         left: 0,
-        zIndex: -1, 
+        zIndex: -1, // Placé en arrière-plan
       }}
     />
   );

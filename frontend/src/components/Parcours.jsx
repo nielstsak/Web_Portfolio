@@ -2,18 +2,18 @@
 
 import { Box, Typography, Paper, Container } from '@mui/material';
 import { Timeline, TimelineItem, TimelineSeparator, TimelineConnector, TimelineContent, TimelineDot, TimelineOppositeContent } from '@mui/lab';
-import SchoolIcon from '@mui/icons-material/School';
-import WorkIcon from '@mui/icons-material/Work';
+import SchoolIcon from '@mui/icons-material/School'; // Icône pour la formation
+import WorkIcon from '@mui/icons-material/Work'; // Icône pour l'expérience pro
 import { motion } from 'framer-motion';
 
-// Animation pour l'apparition en cascade de chaque item de la timeline.
-const itemVariants = {
+// Animation pour l'apparition en cascade de chaque élément
+const variantsElement = {
   hidden: { opacity: 0, y: 50 },
-  visible: (i) => ({
+  visible: (i) => ({ // 'i' est l'index de l'élément
     opacity: 1,
     y: 0,
     transition: {
-      delay: i * 0.2,
+      delay: i * 0.2, // Délai progressif
       duration: 0.5,
       ease: 'easeOut',
     },
@@ -22,29 +22,30 @@ const itemVariants = {
 
 /**
  * Convertit une chaîne de date "JJ/MM/AAAA" en un objet Date JavaScript.
- * @param {string} dateString La date au format "JJ/MM/AAAA".
+ * @param {string} chaineDate La date au format "JJ/MM/AAAA".
  * @returns {Date} L'objet Date correspondant.
  */
-const parseDate = (dateString) => {
-  const parts = dateString.split('/');
-  // Les mois en JS sont indexés à partir de 0 (0 = Janvier).
-  return new Date(parts[2], parts[1] - 1, parts[0]);
+const analyserDate = (chaineDate) => {
+  const elements = chaineDate.split('/');
+  // Les mois en JS sont indexés à partir de 0 (0 = Janvier)
+  return new Date(elements[2], elements[1] - 1, elements[0]);
 };
 
 /**
  * Affiche le parcours professionnel et académique sous forme de timeline verticale.
- * @param {{ parcoursData: Array<object> }} props
+ * @param {{ donneesParcours: Array<object> }} props
  */
-function Parcours({ parcoursData }) {
-  if (!parcoursData || parcoursData.length === 0) {
+function Parcours({ donneesParcours }) {
+  if (!donneesParcours || donneesParcours.length === 0) {
     return null;
   }
 
-  // Tri des expériences de la plus ancienne à la plus récente pour l'affichage chronologique.
-  const sortedParcours = [...parcoursData].sort((a, b) => {
-    const dateA = parseDate(a.periode.split('⟶')[0].trim());
-    const dateB = parseDate(b.periode.split('⟶')[0].trim());
-    return dateA - dateB;
+  // Trie les expériences de la plus ancienne à la plus récente pour l'affichage chronologique.
+  const parcoursTrie = [...donneesParcours].sort((a, b) => {
+    // Extrait la date de début (partie avant '⟶')
+    const dateA = analyserDate(a.periode.split('⟶')[0].trim());
+    const dateB = analyserDate(b.periode.split('⟶')[0].trim());
+    return dateA - dateB; // Tri chronologique ascendant
   });
 
   return (
@@ -53,37 +54,40 @@ function Parcours({ parcoursData }) {
         Mon Parcours
       </Typography>
       <Timeline position="alternate">
-        {sortedParcours.map((item, index) => (
+        {parcoursTrie.map((element, index) => (
           <TimelineItem 
-            key={item.id}
+            key={element.id}
             component={motion.div}
-            custom={index}
+            custom={index} // Passe l'index à l'animation 'visible'
             initial="hidden"
             animate="visible"
-            variants={itemVariants}
+            variants={variantsElement}
           >
+            {/* Colonne de gauche (ou droite) : Période */}
             <TimelineOppositeContent sx={{ m: 'auto 0' }}>
               <Paper 
                 elevation={2} 
                 sx={{ p: 1, textAlign: 'center', display: 'inline-block' }}
               >
                 <Typography variant="body2" color="text.secondary">
-                  {item.periode}
+                  {element.periode}
                 </Typography>
               </Paper>
             </TimelineOppositeContent>
 
+            {/* Centre : Point et connecteurs */}
             <TimelineSeparator>
               <TimelineConnector sx={{ bgcolor: 'primary.main' }} />
               <TimelineDot color="primary" variant="outlined">
-                {/* Affiche une icône différente pour la formation ou l'expérience professionnelle. */}
-                {item.poste.toLowerCase().includes('etudiant') || item.poste.toLowerCase().includes('formation') 
+                {/* Affiche une icône différente pour formation ou expérience */}
+                {element.poste.toLowerCase().includes('etudiant') || element.poste.toLowerCase().includes('formation') 
                   ? <SchoolIcon color="primary" /> 
                   : <WorkIcon color="primary" />}
               </TimelineDot>
               <TimelineConnector sx={{ bgcolor: 'primary.main' }} />
             </TimelineSeparator>
 
+            {/* Contenu principal : Carte de l'expérience */}
             <TimelineContent sx={{ py: '12px', px: 2 }}>
               <Paper 
                 elevation={3} 
@@ -91,15 +95,15 @@ function Parcours({ parcoursData }) {
                   p: 2.5,
                   transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
                   '&:hover': {
-                    transform: 'translateY(-5px)',
+                    transform: 'translateY(-5px)', // Léger soulèvement au survol
                     boxShadow: 8
                   }
                 }}
               >
                 <Typography variant="h6" component="h3" sx={{ fontWeight: 'bold' }}>
-                  {item.poste}
+                  {element.poste}
                 </Typography>
-                <Typography>{item.description}</Typography>
+                <Typography>{element.description}</Typography>
               </Paper>
             </TimelineContent>
           </TimelineItem>

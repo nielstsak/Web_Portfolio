@@ -8,19 +8,19 @@ import Footer from './Footer';
  * Composant de mise en page principal qui enveloppe le contenu
  * de la page avec une barre de navigation et un pied de page.
  * @param {{
- * children: React.ReactNode,
- * onNavigate: function,
- * activeSection: string
+ * enfants: React.ReactNode,
+ * onNaviguer: function,
+ * sectionActive: string
  * }} props
  */
-function PageLayout({ children, onNavigate, activeSection }) {
+function PageLayout({ enfants, onNaviguer, sectionActive }) {
   return (
     <>
-      <Navbar onNavigate={onNavigate} activeSection={activeSection} />
+      <Navbar onNaviguer={onNaviguer} sectionActive={sectionActive} />
       <Box
         component="main"
         sx={{
-          flexGrow: 1,
+          flexGrow: 1, // Permet au contenu principal de prendre toute la place disponible
           margin: 'auto',
           position: 'relative',
           display: 'flex',
@@ -30,7 +30,7 @@ function PageLayout({ children, onNavigate, activeSection }) {
           overflow: 'hidden',
         }}
       >
-        {children}
+        {enfants} {/* Affiche le contenu de la page actuelle */}
       </Box>
       <Footer />
     </>

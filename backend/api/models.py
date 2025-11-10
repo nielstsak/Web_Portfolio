@@ -1,3 +1,5 @@
+# backend/api/models.py
+
 from django.db import models
 from django.core.validators import FileExtensionValidator
 
@@ -8,6 +10,7 @@ class CompetenceTechnologique(models.Model):
         upload_to='competences_logos/',
         null=True,
         blank=True,
+        # Limite les types de fichiers autorisés pour le logo
         validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'webp', 'svg'])]
     )
 
@@ -18,26 +21,28 @@ class CompetenceTechnologique(models.Model):
     def __str__(self):
         return self.nom
 
-class WorkDone(models.Model):
+class TravailEffectue(models.Model):
     """Détaille une tâche ou une réalisation spécifique au sein d'un projet."""
-    project = models.ForeignKey('Project', related_name='work_done', on_delete=models.CASCADE)
-    subtitle = models.CharField(max_length=200)
+    # Relation vers le projet parent. 'Projet' est une chaîne pour éviter les dépendances circulaires.
+    projet = models.ForeignKey('Projet', related_name='travaux_effectues', on_delete=models.CASCADE)
+    sous_titre = models.CharField(max_length=200)
     description = models.TextField()
 
     def __str__(self):
-        return f"{self.project.title} - {self.subtitle}"
+        return f"{self.projet.titre} - {self.sous_titre}"
 
-class Project(models.Model):
+class Projet(models.Model):
     """Modèle central représentant un projet réalisé dans le portfolio."""
-    title = models.CharField(max_length=200)
+    titre = models.CharField(max_length=200)
     video = models.FileField(upload_to='project_videos/', null=True, blank=True)
     description = models.TextField()
     tasks_effectuees = models.TextField(help_text="Décrivez les tâches générales effectuées.")
-    technologies = models.ManyToManyField(CompetenceTechnologique, related_name="projects")
-    source_code_zip = models.FileField(upload_to='project_sources/', null=True, blank=True, help_text="Archive ZIP du code source.")
+    # Relation Plusieurs-à-Plusieurs vers les compétences
+    technologies = models.ManyToManyField(CompetenceTechnologique, related_name="projets")
+    zip_code_source = models.FileField(upload_to='project_sources/', null=True, blank=True, help_text="Archive ZIP du code source.")
 
     def __str__(self):
-        return self.title
+        return self.titre
 
 class Presentation(models.Model):
     """Contient les informations générales de présentation (bio, photo, contact)."""
