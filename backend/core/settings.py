@@ -2,51 +2,43 @@
 
 import os
 from pathlib import Path
-from dotenv import load_dotenv # Gère les variables d'environnement (fichier .env)
-import dj_database_url # Facilite la configuration de la base de données en production
+from dotenv import load_dotenv 
+import dj_database_url 
 
-# Charge les variables depuis le fichier .env
 load_dotenv()
 
-# REPERTOIRE_BASE pointe vers le dossier 'backend'
 REPERTOIRE_BASE = Path(__file__).resolve().parent.parent
 
-# Clé secrète lue depuis l'environnement
 SECRET_KEY = os.getenv('SECRET_KEY')
 
-# Le mode DEBUG est activé si la variable d'env DEBUG est 'True'
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-# Hôtes autorisés
 ALLOWED_HOSTS = []
 
-# Ajoute l'hôte de production (Koyeb, Render, etc.) s'il est fourni
 HOTE_APPLICATION = os.environ.get('APP_HOSTNAME')
 if HOTE_APPLICATION:
     ALLOWED_HOSTS.append(HOTE_APPLICATION)
 
 
-# --- Applications installées ---
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
-    'whitenoise.runserver_nostatic', # Service des fichiers statiques en dev
+    'whitenoise.runserver_nostatic', 
     "django.contrib.staticfiles",
-    'rest_framework', # Django REST Framework
-    'corsheaders', # Gestion CORS
-    'api', # Application locale
-    'cloudinary_storage', # Stockage média Cloudinary
+    'rest_framework', 
+    'corsheaders', 
+    'api', 
+    'cloudinary_storage', 
     'cloudinary',
 ]
 
-# --- Middlewares ---
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware', # Doit être placé tôt
-    'corsheaders.middleware.CorsMiddleware', # Gestion des requêtes cross-origin
+    'whitenoise.middleware.WhiteNoiseMiddleware', 
+    'corsheaders.middleware.CorsMiddleware', 
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -55,10 +47,8 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-# Fichier de routes principal
 ROOT_URLCONF = "core.urls"
 
-# --- Templates Django ---
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -74,12 +64,8 @@ TEMPLATES = [
     },
 ]
 
-# Point d'entrée pour les serveurs WSGI (déploiement synchrone)
 WSGI_APPLICATION = "core.wsgi.application"
 
-# --- Base de données ---
-# Configure la DB via la variable d'env DATABASE_URL (pour la prod)
-# ou utilise un fichier SQLite local par défaut (pour le dev).
 DATABASES = {
     'default': dj_database_url.config(
         default=f'sqlite:///{REPERTOIRE_BASE / "db.sqlite3"}',
@@ -87,7 +73,6 @@ DATABASES = {
     )
 }
 
-# --- Validateurs de mot de passe ---
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",},
@@ -95,31 +80,43 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",},
 ]
 
-# --- Internationalisation ---
-LANGUAGE_CODE = "fr-fr" # Langue du projet
+LANGUAGE_CODE = "fr-fr" 
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# --- Configuration CORS ---
-# Liste des origines autorisées à faire des requêtes à cette API
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173", # Autorise le frontend Vite en local
+    "http://localhost:5173", 
 ]
 URL_FRONTEND_VERCEL = os.environ.get('VERCEL_FRONTEND_URL')
 if URL_FRONTEND_VERCEL:
     CORS_ALLOWED_ORIGINS.append(URL_FRONTEND_VERCEL)
 
-# --- Fichiers Statiques (Admin) ---
 STATIC_URL = "static/"
 STATIC_ROOT = REPERTOIRE_BASE / "staticfiles"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # --- Fichiers Média (Uploads) ---
-# Utilise Cloudinary pour le stockage des fichiers téléversés
 CLOUDINARY_STORAGE = {
     'CLOUDINARY_URL': os.environ.get('CLOUDINARY_URL'),
+    
+    # --- BLOC MODIFIÉ ---
+    # Force Cloudinary à traiter ces extensions comme 'image' ou 'video'
+    'RESOURCE_TYPE_OVERRIDES': {
+        # Images (logos, photo de profil)
+        'jpg': 'image',
+        'jpeg': 'image',
+        'png': 'image',
+        'webp': 'image',
+        'svg': 'image',
+        
+        # Vidéos (vidéos de projet)
+        'mp4': 'video',
+        'mov': 'video',
+        'webm': 'video',
+    }
+    # --- FIN DE LA MODIFICATION ---
 }
-MEDIA_URL = '/media/' # URL de base pour les médias
+MEDIA_URL = '/media/' 
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
