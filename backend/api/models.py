@@ -6,7 +6,7 @@ from django.core.validators import FileExtensionValidator
 class CompetenceTechnologique(models.Model):
     """Représente une compétence technologique (ex: Python, React) avec son logo."""
     nom = models.CharField(max_length=100)
-    logo = models.ImageField(
+    logo = models.FileField(
         upload_to='competences_logos/',
         null=True,
         blank=True,

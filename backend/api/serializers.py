@@ -1,4 +1,4 @@
-# backend\api\serializers.py
+# backend/api/serializers.py
 from rest_framework import serializers
 from .models import (
     Projet,
@@ -12,7 +12,6 @@ from .models import (
 
 class CompetenceTechnologiqueSerializer(serializers.ModelSerializer):
     """Sérialiseur pour le modèle CompetenceTechnologique."""
-    # Retourne l'URL complète du fichier, plutôt que juste le chemin.
     logo = serializers.FileField(use_url=True)
 
     class Meta:
@@ -27,9 +26,7 @@ class TravailEffectueSerializer(serializers.ModelSerializer):
 
 class ProjetSerializer(serializers.ModelSerializer):
     """Sérialiseur pour le modèle Projet, incluant ses relations."""
-    # Imbrique les données complètes des technologies associées.
     technologies = CompetenceTechnologiqueSerializer(many=True, read_only=True)
-    # Imbrique les données des tâches via le 'related_name' défini dans le modèle TravailEffectue.
     travaux_effectues = TravailEffectueSerializer(many=True, read_only=True)
 
     class Meta:
@@ -41,7 +38,7 @@ class ProjetSerializer(serializers.ModelSerializer):
             'description',
             'tasks_effectuees',
             'technologies',
-            'travaux_effectues' # Doit correspondre au champ défini ci-dessus
+            'travaux_effectues'
         ]
 
 class PresentationSerializer(serializers.ModelSerializer):
@@ -50,7 +47,7 @@ class PresentationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Presentation
-        fields = '__all__' # Inclut tous les champs du modèle
+        fields = '__all__'
 
 class PosteCibleSerializer(serializers.ModelSerializer):
     """Sérialiseur pour le modèle PosteCible."""

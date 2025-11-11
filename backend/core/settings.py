@@ -19,7 +19,6 @@ HOTE_APPLICATION = os.environ.get('APP_HOSTNAME')
 if HOTE_APPLICATION:
     ALLOWED_HOSTS.append(HOTE_APPLICATION)
 
-
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -97,26 +96,18 @@ STATIC_URL = "static/"
 STATIC_ROOT = REPERTOIRE_BASE / "staticfiles"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-# --- Fichiers Média (Uploads) ---
 CLOUDINARY_STORAGE = {
     'CLOUDINARY_URL': os.environ.get('CLOUDINARY_URL'),
-    
-    # --- BLOC MODIFIÉ ---
-    # Force Cloudinary à traiter ces extensions comme 'image' ou 'video'
     'RESOURCE_TYPE_OVERRIDES': {
-        # Images (logos, photo de profil)
         'jpg': 'image',
         'jpeg': 'image',
         'png': 'image',
         'webp': 'image',
         'svg': 'image',
-        
-        # Vidéos (vidéos de projet)
         'mp4': 'video',
         'mov': 'video',
         'webm': 'video',
     }
-    # --- FIN DE LA MODIFICATION ---
 }
 MEDIA_URL = '/media/' 
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
