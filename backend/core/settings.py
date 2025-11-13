@@ -1,10 +1,12 @@
 # backend/core/settings.py
 
 import os
+import socket
 from pathlib import Path
 from dotenv import load_dotenv 
 import dj_database_url 
 
+socket.setdefaulttimeout(300)
 load_dotenv()
 
 REPERTOIRE_BASE = Path(__file__).resolve().parent.parent
