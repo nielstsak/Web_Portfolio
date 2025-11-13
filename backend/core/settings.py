@@ -94,7 +94,17 @@ if URL_FRONTEND_VERCEL:
 
 STATIC_URL = "static/"
 STATIC_ROOT = REPERTOIRE_BASE / "staticfiles"
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+# --- CONFIGURATION STOCKAGE (Django 5+) ---
+# Remplacement de DEFAULT_FILE_STORAGE et STATICFILES_STORAGE par STORAGES
+STORAGES = {
+    "default": {
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 CLOUDINARY_STORAGE = {
     'CLOUDINARY_URL': os.environ.get('CLOUDINARY_URL'),
@@ -110,14 +120,11 @@ CLOUDINARY_STORAGE = {
     }
 }
 MEDIA_URL = '/media/' 
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
-# --- LOGS DEBUG ---
+# --- LOGS DEBUG (Conservés pour vérification finale) ---
 print("--- DEBUG CONFIGURATION CLOUDINARY ---")
+print(f"Django Version: 5.x detected (Using STORAGES setting)")
 print(f"DEBUG Mode: {DEBUG}")
 print(f"CLOUDINARY_URL Configured: {bool(os.environ.get('CLOUDINARY_URL'))}")
-if os.environ.get('CLOUDINARY_URL'):
-    print(f"CLOUDINARY_URL Prefix: {os.environ.get('CLOUDINARY_URL')[:15]}...")
-print(f"DEFAULT_FILE_STORAGE: {DEFAULT_FILE_STORAGE}")
 print(f"MEDIA_URL: {MEDIA_URL}")
 print("--- FIN DEBUG CONFIGURATION ---")
