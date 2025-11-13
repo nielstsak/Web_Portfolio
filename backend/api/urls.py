@@ -12,7 +12,7 @@ from .views import (
 
 # Crée un routeur pour générer automatiquement les routes de l'API
 router = DefaultRouter()
-router.register(r'projects', ProjetViewSet, basename='projet') # 'projet' est le nom de base
+router.register(r'projets', ProjetViewSet, basename='projet') # 'projet' est le nom de base
 router.register(r'presentations', PresentationViewSet, basename='presentation')
 router.register(r'postes', PosteCibleViewSet, basename='poste')
 router.register(r'diplomes', DiplomeViewSet, basename='diplome')

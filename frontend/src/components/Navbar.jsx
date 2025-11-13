@@ -56,10 +56,10 @@ function Navbar({ onNaviguer, sectionActive }) {
               Introduction
             </Button>
             <Button
-              onClick={() => onNaviguer && onNaviguer('projects')}
+              onClick={() => onNaviguer && onNaviguer('projets')}
               sx={{
-                color: sectionActive === 'projects' ? 'text.primary' : 'text.secondary',
-                fontWeight: sectionActive === 'projects' ? 'bold' : 'normal',
+                color: sectionActive === 'projets' ? 'text.primary' : 'text.secondary',
+                fontWeight: sectionActive === 'projets' ? 'bold' : 'normal',
                 '&:hover': { color: 'text.primary' },
               }}
             >

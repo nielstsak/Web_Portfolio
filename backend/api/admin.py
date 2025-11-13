@@ -39,7 +39,7 @@ class ProjetAdmin(admin.ModelAdmin):
         
         # Vérifie l'URL après sauvegarde
         if obj.video:
-             print(f"[ADMIN] URL Vidéo après sauvegarde: {getattr(obj.video, 'url', 'Pas d\'URL')}", file=sys.stdout)
+             print(f"[ADMIN] URL Vidéo après sauvegarde: {getattr(obj.video, 'url', 'Pas dURL')}", file=sys.stdout)
 
 
 class CompetenceTechnologiqueAdmin(admin.ModelAdmin):
@@ -49,7 +49,7 @@ class CompetenceTechnologiqueAdmin(admin.ModelAdmin):
     def afficher_apercu_logo(self, competence):
         """Affiche un petit aperçu du logo dans la liste de l'interface d'administration."""
         if competence.logo:
-            return mark_safe(f'<img src="{competence.logo.url}" alt="{competence.nom}" height="40" />')
+            return mark_safe(f'<img src="{competence.logo.url}" alt="{competence.nom}" height="40" >')
         return "Aucun logo"
     afficher_apercu_logo.short_description = 'Aperçu du Logo'
 
@@ -61,7 +61,7 @@ class CompetenceTechnologiqueAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
         
         if obj.logo:
-            print(f"[ADMIN] URL Logo après sauvegarde: {getattr(obj.logo, 'url', 'Pas d\'URL')}", file=sys.stdout)
+            print(f"[ADMIN] URL Logo après sauvegarde: {getattr(obj.logo, 'url', 'Pas dURL')}", file=sys.stdout)
 
 
 class PresentationAdmin(admin.ModelAdmin):
@@ -71,7 +71,7 @@ class PresentationAdmin(admin.ModelAdmin):
             print(f"[ADMIN] Photo reçue: {request.FILES['photo'].name}", file=sys.stdout)
         super().save_model(request, obj, form, change)
         if obj.photo:
-             print(f"[ADMIN] URL Photo après sauvegarde: {getattr(obj.photo, 'url', 'Pas d\'URL')}", file=sys.stdout)
+             print(f"[ADMIN] URL Photo après sauvegarde: {getattr(obj.photo, 'url', 'Pas dURL')}", file=sys.stdout)
 
 
 # --- Enregistrement des modèles sur le site d'administration Django ---

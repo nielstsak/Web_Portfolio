@@ -96,7 +96,7 @@ function CodeBrowser({ idProjet }) {
       if (!idProjet) return;
       setChargeArborescence(true);
       try {
-        const reponse = await clientApi.get(`/projects/${idProjet}/source-code-tree/`);
+        const reponse = await clientApi.get(`/projets/${idProjet}/source-code-tree/`);
         setArborescence(reponse.data);
         setErreur(null);
       } catch (err) {
@@ -113,7 +113,7 @@ function CodeBrowser({ idProjet }) {
     setChargeFichier(true);
     setFichierSelectionne(chemin);
     try {
-      const reponse = await clientApi.get(`/projects/${idProjet}/source-code-file/?path=${chemin}`);
+      const reponse = await clientApi.get(`/projets/${idProjet}/source-code-file/?path=${chemin}`);
       setContenuFichier(reponse.data.content);
       setErreur(null);
     } catch (err) {

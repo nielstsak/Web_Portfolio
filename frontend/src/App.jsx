@@ -13,7 +13,7 @@ import AnimatedBackground from './components/AnimatedBackground';
 import { useAppStore } from './store/appStore'; // Importe le store global
 
 // Définit les sections navigables de la page d'accueil.
-const sections = ['introduction', 'parcours', 'projects'];
+const sections = ['introduction', 'parcours', 'projets'];
 
 /**
  * Composant racine de l'application.

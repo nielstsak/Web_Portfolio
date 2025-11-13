@@ -10,7 +10,7 @@ import ListeProjets from '../components/ProjectList'; // Renommé depuis Project
 import { useAppStore } from '../store/appStore';
 
 // Ordre de navigation des sections pour le défilement.
-const sections = ['introduction', 'parcours', 'projects'];
+const sections = ['introduction', 'parcours', 'projets'];
 
 // Variantes d'animation pour la transition entre les sections.
 const variantsSection = {
@@ -65,7 +65,7 @@ function LandingPage({ sectionActive, onNaviguer }) {
         return <Introduction estVisible={true} />;
       case 'parcours':
         return <Parcours donneesParcours={donneesParcours} />;
-      case 'projects':
+      case 'projets':
         return <ListeProjets projets={projets} onSelectionnerProjet={gererSelectionProjet} />;
       default:
         return null;

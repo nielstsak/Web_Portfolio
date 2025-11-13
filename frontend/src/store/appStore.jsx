@@ -40,7 +40,7 @@ export const useAppStore = create((set) => ({
         reponseDiplomes,
         reponseCompetences,
       ] = await Promise.all([
-        clientApi.get('/projects/'),
+        clientApi.get('/projets/'),
         clientApi.get('/parcours/'),
         clientApi.get('/presentations/'),
         clientApi.get('/postes/'),

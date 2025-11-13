@@ -58,7 +58,7 @@ function ProjectPage() {
       setChargement(true);
       setErreur(null);
       try {
-        const reponse = await clientApi.get(`/projects/${idProjet}/`);
+        const reponse = await clientApi.get(`/projets/${idProjet}/`);
         setProjet(reponse.data);
       } catch (err) {
         setErreur('Erreur lors de la récupération du projet.');
