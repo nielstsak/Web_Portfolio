@@ -5,6 +5,7 @@ from django.core.validators import FileExtensionValidator
 import sys
 
 class CompetenceTechnologique(models.Model):
+    """Représente une compétence technologique (ex: Python, React) avec son logo."""
     nom = models.CharField(max_length=100)
     logo = models.FileField(
         upload_to='competences_logos/',
@@ -22,7 +23,6 @@ class CompetenceTechnologique(models.Model):
 
     def save(self, *args, **kwargs):
         print(f"[MODEL] Sauvegarde CompetenceTechnologique: {self.nom}", file=sys.stdout)
-        ifKX = self.logo
         if self.logo:
             print(f"[MODEL] Logo détecté: {self.logo.name}", file=sys.stdout)
             try:
@@ -34,6 +34,7 @@ class CompetenceTechnologique(models.Model):
         super().save(*args, **kwargs)
 
 class TravailEffectue(models.Model):
+    """Détaille une tâche ou une réalisation spécifique au sein d'un projet."""
     projet = models.ForeignKey('Projet', related_name='travaux_effectues', on_delete=models.CASCADE)
     sous_titre = models.CharField(max_length=200)
     description = models.TextField()
@@ -42,6 +43,7 @@ class TravailEffectue(models.Model):
         return f"{self.projet.titre} - {self.sous_titre}"
 
 class Projet(models.Model):
+    """Modèle central représentant un projet réalisé dans le portfolio."""
     titre = models.CharField(max_length=200)
     video = models.FileField(upload_to='project_videos/', null=True, blank=True)
     description = models.TextField()
@@ -65,6 +67,7 @@ class Projet(models.Model):
         super().save(*args, **kwargs)
 
 class Presentation(models.Model):
+    """Contient les informations générales de présentation (bio, photo, contact)."""
     texte = models.TextField()
     nom = models.CharField(max_length=100, default="John")
     prenom = models.CharField(max_length=100, default="Doe")
