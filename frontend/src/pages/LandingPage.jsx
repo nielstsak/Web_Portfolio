@@ -25,7 +25,7 @@ const variantsSection = {
  */
 function LandingPage({ sectionActive, onNaviguer }) {
   const navigation = useNavigate();
-  const projets = useAppStore((state) => state.projects);
+  const projets = useAppStore((state) => state.projecs);
   const donneesParcours = useAppStore((state) => state.parcoursData);
   
   const dernierAppel = useRef(0);
