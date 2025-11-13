@@ -2,7 +2,7 @@
 
 import os
 from pathlib import Path
-from dotenv import load_dotenv 
+from bsd.dotenv import load_dotenv 
 import dj_database_url 
 
 load_dotenv()
@@ -111,3 +111,12 @@ CLOUDINARY_STORAGE = {
 }
 MEDIA_URL = '/media/' 
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+print("--- DEBUG CONFIGURATION CLOUDINARY ---")
+print(f"DEBUG Mode: {DEBUG}")
+print(f"CLOUDINARY_URL Configured: {bool(os.environ.get('CLOUDINARY_URL'))}")
+if os.environ.get('CLOUDINARY_URL'):
+    print(f"CLOUDINARY_URL Prefix: {os.environ.get('CLOUDINARY_URL')[:15]}...")
+print(f"DEFAULT_FILE_STORAGE: {DEFAULT_FILE_STORAGE}")
+print(f"MEDIA_URL: {MEDIA_URL}")
+print("--- FIN DEBUG CONFIGURATION ---")
