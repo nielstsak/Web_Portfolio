@@ -1,14 +1,22 @@
 # backend/api/serializers.py
 from rest_framework import serializers
 from .models import (
-    Projet,
+    # NOUVEAU
+    EvenementChronologique,
+    
+    # CONSERVÉS
     Presentation,
     PosteCible,
     Diplome,
     CompetenceTechnologique,
-    Parcours,
-    TravailEffectue,
+
+    # SUPPRIMÉS (retirés des imports)
+    # Projet,
+    # Parcours,
+    # TravailEffectue,
 )
+
+# --- SÉRIALISEURS CONSERVÉS (Mis à jour) ---
 
 class CompetenceTechnologiqueSerializer(serializers.ModelSerializer):
     """Sérialiseur pour le modèle CompetenceTechnologique."""
@@ -17,30 +25,6 @@ class CompetenceTechnologiqueSerializer(serializers.ModelSerializer):
     class Meta:
         model = CompetenceTechnologique
         fields = ['id', 'nom', 'logo']
-
-class TravailEffectueSerializer(serializers.ModelSerializer):
-    """Sérialiseur pour les tâches effectuées au sein d'un projet."""
-    class Meta:
-        model = TravailEffectue
-        fields = ['id', 'sous_titre', 'description']
-
-class ProjetSerializer(serializers.ModelSerializer):
-    """Sérialiseur pour le modèle Projet, incluant ses relations."""
-    technologies = CompetenceTechnologiqueSerializer(many=True, read_only=True)
-    travaux_effectues = TravailEffectueSerializer(many=True, read_only=True)
-    video = serializers.FileField(use_url=True, required=False)
-
-    class Meta:
-        model = Projet
-        fields = [
-            'id', 
-            'titre', 
-            'video', 
-            'description',
-            'tasks_effectuees',
-            'technologies',
-            'travaux_effectues'
-        ]
 
 class PresentationSerializer(serializers.ModelSerializer):
     """Sérialiseur pour le modèle Presentation."""
@@ -58,12 +42,25 @@ class PosteCibleSerializer(serializers.ModelSerializer):
 
 class DiplomeSerializer(serializers.ModelSerializer):
     """Sérialiseur pour le modèle Diplome."""
+    # Champ 'parchemin' ajouté (CloudinaryField est traité comme FileField)
+    parchemin = serializers.FileField(use_url=True, required=False)
+
     class Meta:
         model = Diplome
-        fields = '__all__'
+        fields = ['id', 'titre', 'institution', 'parchemin'] # Mise à jour explicite
 
-class ParcoursSerializer(serializers.ModelSerializer):
-    """Sérialiseur pour le modèle Parcours."""
+
+# --- NOUVEAU SÉRIALISEUR ---
+
+class EvenementChronologiqueSerializer(serializers.ModelSerializer):
+    """Sérialiseur pour le nouveau modèle EvenementChronologique."""
     class Meta:
-        model = Parcours
-        fields = '__all__'
+        model = EvenementChronologique
+        # Inclut titre, description, dates, type, specificites
+        fields = '__all__' 
+
+
+# --- SÉRIALISEURS SUPPRIMÉS (retirés) ---
+# class TravailEffectueSerializer(serializers.ModelSerializer): ...
+# class ProjetSerializer(serializers.ModelSerializer): ...
+# class ParcoursSerializer(serializers.ModelSerializer): ...
