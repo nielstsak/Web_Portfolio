@@ -14,7 +14,7 @@ const InfosContact = ({ presentation, postes }) => (
   <Grid container spacing={4} alignItems="center">
     
     {/* Partie Gauche : Photo, Nom, Email */}
-    <Grid item xs={12} md={7}>
+    <Grid item size={{ xs: 12, md: 7 }} >
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
         {presentation?.photo && (
           <Avatar
@@ -36,7 +36,7 @@ const InfosContact = ({ presentation, postes }) => (
     </Grid>
 
     {/* Partie Droite : Postes ciblés */}
-    <Grid item xs={12} md={5}>
+    <Grid item size={{ xs: 12, md: 5 }} >
       <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
         Postes ciblés
       </Typography>

@@ -101,7 +101,7 @@ function ProjectPage() {
           
           <Grid container spacing={4} sx={{ alignItems: 'stretch' }}>
             {/* Colonne principale : Vidéo */}
-            <Grid item xs={12} md={9}>
+            <Grid item size={{ xs: 12, md: 9 }} >
               <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden', height: '100%' }}>
                 {projet.video && (
                   <Box component="video" src={projet.video} controls muted playsInline sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
@@ -110,7 +110,7 @@ function ProjectPage() {
             </Grid>
             
             {/* Colonne latérale : Technologies */}
-            <Grid item xs={12} md={3}>
+            <Grid item size={{ xs: 12, md: 3 }}>
               <Paper elevation={2} sx={{ p: 3, borderRadius: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
                 <Typography variant="h5" sx={{ paddingBottom: 6, mb: 2, fontWeight: 600 }}>Technologies</Typography>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, alignItems: 'center', justifyContent: 'space-around' }}>
@@ -126,7 +126,7 @@ function ProjectPage() {
             </Grid>
 
             {/* Section inférieure : Onglets de détails */}
-            <Grid item xs={12}>
+            <Grid item size={{ xs: 12, md: 12 }}>
               <Paper elevation={2} sx={{ borderRadius: 2, display: 'flex', flexDirection: 'column', height: 'auto' }}>
                 <Box sx={{ p: 3, pb: 0, borderBottom: 1, borderColor: 'divider' }}>
                   <Tabs value={ongletActif} onChange={gererChangementOnglet} variant="fullWidth">

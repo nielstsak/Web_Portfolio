@@ -46,7 +46,7 @@ function Introduction({ estVisible }) {
         <Grid container spacing={4} alignItems="stretch">
           
           {/* Colonne de Gauche : Présentation */}
-          <Grid item xs={12} md={7}>
+          <Grid item size={{ xs: 12, md: 7 }} >
             <SectionPaper>
               <Typography variant="h5" component="h2" gutterBottom>
                 Présentation
@@ -60,7 +60,7 @@ function Introduction({ estVisible }) {
           </Grid>
           
           {/* Colonne de Droite : Diplômes & Compétences */}
-          <Grid item xs={12} md={5}>
+          <Grid item size={{ xs: 12, md: 5 }} >
             <SectionPaper>
               <Typography variant="h5" component="h2" gutterBottom>
                 Diplômes & Compétences
