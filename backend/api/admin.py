@@ -12,6 +12,7 @@ from .models import (
     Parcours,
     TravailEffectue,
 )
+from django.contrib import messages
 
 
 class TravailEffectueInline(admin.TabularInline):
@@ -34,12 +35,19 @@ class ProjetAdmin(admin.ModelAdmin):
         else:
             print("[ADMIN] Pas de fichier vidéo dans request.FILES", file=sys.stdout)
         
-        # Appelle la méthode de sauvegarde standard
-        super().save_model(request, obj, form, change)
-        
-        # Vérifie l'URL après sauvegarde
-        if obj.video:
-             print(f"[ADMIN] URL Vidéo après sauvegarde: {getattr(obj.video, 'url', 'Pas dURL')}", file=sys.stdout)
+        try:
+            # Appelle la méthode de sauvegarde standard
+            super().save_model(request, obj, form, change)
+            
+            # Vérifie l'URL après sauvegarde
+            if obj.video:
+                 print(f"[ADMIN] URL Vidéo après sauvegarde: {getattr(obj.video, 'url', 'Pas dURL')}", file=sys.stdout)
+
+        except Exception as e:
+            # Capture l'erreur exacte et l'affiche dans les logs et l'interface admin
+            print(f"[ADMIN] ERREUR LORS DE LA SAUVEGARDE: {str(e)}", file=sys.stderr)
+            messages.set_level(request, messages.ERROR)
+            messages.error(request, f"Échec de l'upload Cloudinary : {str(e)}")
 
 
 class CompetenceTechnologiqueAdmin(admin.ModelAdmin):
