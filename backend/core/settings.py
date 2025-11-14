@@ -121,12 +121,6 @@ CLOUDINARY_STORAGE = {
 }
 MEDIA_URL = '/media/' 
 
-# --- AJOUT DE LA COMPATIBILITÉ ASCENDANTE POUR django-cloudinary-storage==0.3.0 ---
-DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
-CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL')
-# ---------------------------------------------------------------------------------
-
-
 print("--- DEBUG CONFIGURATION CLOUDINARY ---")
 print(f"Django Version: 5.x detected (Using STORAGES setting)")
 print(f"DEBUG Mode: {DEBUG}")
