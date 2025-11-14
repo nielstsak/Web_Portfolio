@@ -3,11 +3,13 @@
 from django.db import models
 from django.core.validators import FileExtensionValidator
 import sys
+from cloudinary_storage.fields import CloudinaryField
 
 class CompetenceTechnologique(models.Model):
     """Représente une compétence technologique (ex: Python, React) avec son logo."""
     nom = models.CharField(max_length=100)
-    logo = models.FileField(
+    logo = CloudinaryField(
+        resource_type='image',
         upload_to='competences_logos/',
         null=True,
         blank=True,
@@ -45,11 +47,22 @@ class TravailEffectue(models.Model):
 class Projet(models.Model):
     """Modèle central représentant un projet réalisé dans le portfolio."""
     titre = models.CharField(max_length=200)
-    video = models.FileField(upload_to='project_videos/', null=True, blank=True)
+    video = CloudinaryField(
+        resource_type='video',
+        upload_to='project_videos/', 
+        null=True, 
+        blank=True
+    )
     description = models.TextField()
     tasks_effectuees = models.TextField(help_text="Décrivez les tâches générales effectuées.")
     technologies = models.ManyToManyField(CompetenceTechnologique, related_name="projets")
-    zip_code_source = models.FileField(upload_to='project_sources/', null=True, blank=True, help_text="Archive ZIP du code source.")
+    zip_code_source = CloudinaryField(
+        resource_type='raw',
+        upload_to='project_sources/', 
+        null=True, 
+        blank=True, 
+        help_text="Archive ZIP du code source."
+    )
 
     def __str__(self):
         return self.titre
@@ -72,7 +85,8 @@ class Presentation(models.Model):
     nom = models.CharField(max_length=100, default="John")
     prenom = models.CharField(max_length=100, default="Doe")
     email = models.EmailField(default="john.doe@example.com")
-    photo = models.FileField(
+    photo = CloudinaryField(
+        resource_type='image',
         upload_to='photos/',
         null=True,
         blank=True,
