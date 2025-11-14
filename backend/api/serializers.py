@@ -28,6 +28,7 @@ class ProjetSerializer(serializers.ModelSerializer):
     """Sérialiseur pour le modèle Projet, incluant ses relations."""
     technologies = CompetenceTechnologiqueSerializer(many=True, read_only=True)
     travaux_effectues = TravailEffectueSerializer(many=True, read_only=True)
+    video = serializers.FileField(use_url=True, required=False)
 
     class Meta:
         model = Projet
