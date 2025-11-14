@@ -25,18 +25,6 @@ class CompetenceTechnologique(models.Model):
     def __str__(self):
         return self.nom
 
-    def save(self, *args, **kwargs):
-        print(f"[MODEL] Sauvegarde CompetenceTechnologique: {self.nom}", file=sys.stdout)
-        if self.logo:
-            print(f"[MODEL] Logo détecté: {self.logo.name}", file=sys.stdout)
-            try:
-                print(f"[MODEL] Taille du fichier: {self.logo.size} bytes", file=sys.stdout)
-            except Exception as e:
-                print(f"[MODEL] Impossible de lire la taille: {e}", file=sys.stdout)
-        else:
-            print("[MODEL] Aucun logo fourni", file=sys.stdout)
-        super().save(*args, **kwargs)
-
 class Presentation(models.Model):
     """Contient les informations générales de présentation (bio, photo, contact)."""
     texte = models.TextField()
@@ -58,12 +46,6 @@ class Presentation(models.Model):
     def __str__(self):
         return "Texte de présentation du projet professionnel"
 
-    def save(self, *args, **kwargs):
-        print(f"[MODEL] Sauvegarde Presentation: {self.prenom} {self.nom}", file=sys.stdout)
-        if self.photo:
-            print(f"[MODEL] Photo détectée: {self.photo.name}", file=sys.stdout)
-        super().save(*args, **kwargs)
-
 class PosteCible(models.Model):
     nom = models.CharField(max_length=100)
 
@@ -75,8 +57,17 @@ class PosteCible(models.Model):
         return self.nom
 
 class Diplome(models.Model):
+    """Modèle conservé pour les diplômes (utilisé dans la section Introduction)."""
     titre = models.CharField(max_length=200)
     institution = models.CharField(max_length=200)
+    # Champ ajouté pour le lien vers le justificatif
+    parchemin = CloudinaryField(
+        resource_type='image', # Cloudinary gère 'image' et 'raw' (pdf)
+        folder='diplomes',
+        null=True,
+        blank=True,
+        help_text="Lien vers le PDF ou l'image du diplôme."
+    )
 
     def __str__(self):
         return self.titre
@@ -92,28 +83,35 @@ class EvenementChronologique(models.Model):
     # Définition des types d'événements
     class TypeEvenement(models.TextChoices):
         ETUDES = 'Etudes', 'Études'
-        DIPLOME = 'Diplome', 'Diplôme'
+        DIPLOME = 'Diplome', 'Diplôme' # Lié à l'obtention, différent du modèle Diplome
         SERVICE_CIVIQUE = 'Service civique', 'Service civique'
         PROJETS_ETUDIANT = 'Projets Etudiant', 'Projets Étudiant'
         PROJETS_PROFESSIONNELS = 'Projets Professionnels', 'Projets Professionnels'
+        PROJETS_PERSONNELS = 'Projets Personnels', 'Projets Personnels' # Type ajouté
         ACTIVITE_REMUNERATRICE = 'Activité rémunératrice', 'Activité rémunératrice'
 
     # Champs communs
-    titre = models.CharField(max_length=255, verbose_name="Titre (français)")
-    description = models.TextField(verbose_name="Description (français)")
+    titre = models.CharField(max_length=255, verbose_name="Titre")
     date_debut = models.DateField()
-    date_fin = models.DateField(null=True, blank=True, help_text="Laisser vide si l'événement est en cours ou ponctuel.")
+    date_fin = models.DateField(null=True, blank=True, help_text="Laisser vide si en cours ou ponctuel.")
     type = models.CharField(
         max_length=50,
         choices=TypeEvenement.choices,
         default=TypeEvenement.PROJETS_PROFESSIONNELS
     )
     
-    # Données spécifiques à chaque type (ex: 'institution', 'technologies', 'url_video')
+    # Description/Introduction (principalement pour les Projets)
+    description = models.TextField(
+        verbose_name="Description (Introduction)", 
+        blank=True,
+        help_text="Utilisé comme introduction pour les projets."
+    )
+    
+    # Données spécifiques à chaque type
     specificites = models.JSONField(
         default=dict,
         blank=True,
-        help_text="Données variables selon le type (ex: {'institution': '...', 'url_video': '...'})"
+        help_text="Données variables selon le type (voir documentation de la structure)"
     )
 
     class Meta:
@@ -124,7 +122,7 @@ class EvenementChronologique(models.Model):
     def __str__(self):
         return f"[{self.get_type_display()}] {self.titre} ({self.date_debut})"
 
-# --- MODÈLES SUPPRIMÉS (retirés de ce fichier) ---
-# - Projet
-# - TravailEffectue
-# - Parcours
+# --- MODÈLES SUPPRIMÉS (retirés) ---
+# Projet
+# TravailEffectue
+# Parcours
