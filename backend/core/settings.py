@@ -97,8 +97,6 @@ if URL_FRONTEND_VERCEL:
 STATIC_URL = "static/"
 STATIC_ROOT = REPERTOIRE_BASE / "staticfiles"
 
-# --- CONFIGURATION STOCKAGE (Django 5+) ---
-# Remplacement de DEFAULT_FILE_STORAGE et STATICFILES_STORAGE par STORAGES
 STORAGES = {
     "default": {
         "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
@@ -123,7 +121,12 @@ CLOUDINARY_STORAGE = {
 }
 MEDIA_URL = '/media/' 
 
-# --- LOGS DEBUG (Conservés pour vérification finale) ---
+# --- AJOUT DE LA COMPATIBILITÉ ASCENDANTE POUR django-cloudinary-storage==0.3.0 ---
+DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
+CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL')
+# ---------------------------------------------------------------------------------
+
+
 print("--- DEBUG CONFIGURATION CLOUDINARY ---")
 print(f"Django Version: 5.x detected (Using STORAGES setting)")
 print(f"DEBUG Mode: {DEBUG}")

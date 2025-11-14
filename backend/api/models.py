@@ -3,7 +3,6 @@
 from django.db import models
 from django.core.validators import FileExtensionValidator
 import sys
-from cloudinary_storage.fields import CloudinaryField
 
 class CompetenceTechnologique(models.Model):
     """Représente une compétence technologique (ex: Python, React) avec son logo."""
@@ -46,12 +45,7 @@ class TravailEffectue(models.Model):
 class Projet(models.Model):
     """Modèle central représentant un projet réalisé dans le portfolio."""
     titre = models.CharField(max_length=200)
-    video = CloudinaryField(
-        resource_type='video', 
-        upload_to='project_videos/', 
-        null=True, 
-        blank=True
-    )
+    video = models.FileField(upload_to='project_videos/', null=True, blank=True)
     description = models.TextField()
     tasks_effectuees = models.TextField(help_text="Décrivez les tâches générales effectuées.")
     technologies = models.ManyToManyField(CompetenceTechnologique, related_name="projets")
@@ -63,7 +57,7 @@ class Projet(models.Model):
     def save(self, *args, **kwargs):
         print(f"[MODEL] Sauvegarde Projet: {self.titre}", file=sys.stdout)
         if self.video:
-            print(f"[MODEL] Vidéo détectée", file=sys.stdout)
+            print(f"[MODEL] Vidéo détectée: {self.video.name}", file=sys.stdout)
         else:
             print("[MODEL] Aucune vidéo fournie", file=sys.stdout)
         
