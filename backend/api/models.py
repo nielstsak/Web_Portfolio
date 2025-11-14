@@ -3,14 +3,14 @@
 from django.db import models
 from django.core.validators import FileExtensionValidator
 import sys
-from cloudinary_storage.fields import CloudinaryField
+from cloudinary.models import CloudinaryField
 
 class CompetenceTechnologique(models.Model):
     """Représente une compétence technologique (ex: Python, React) avec son logo."""
     nom = models.CharField(max_length=100)
     logo = CloudinaryField(
         resource_type='image',
-        upload_to='competences_logos/',
+        folder='competences_logos',
         null=True,
         blank=True,
         validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'webp', 'svg'])]
@@ -49,7 +49,7 @@ class Projet(models.Model):
     titre = models.CharField(max_length=200)
     video = CloudinaryField(
         resource_type='video',
-        upload_to='project_videos/', 
+        folder='project_videos', 
         null=True, 
         blank=True
     )
@@ -58,7 +58,7 @@ class Projet(models.Model):
     technologies = models.ManyToManyField(CompetenceTechnologique, related_name="projets")
     zip_code_source = CloudinaryField(
         resource_type='raw',
-        upload_to='project_sources/', 
+        folder='project_sources', 
         null=True, 
         blank=True, 
         help_text="Archive ZIP du code source."
@@ -87,7 +87,7 @@ class Presentation(models.Model):
     email = models.EmailField(default="john.doe@example.com")
     photo = CloudinaryField(
         resource_type='image',
-        upload_to='photos/',
+        folder='photos',
         null=True,
         blank=True,
         validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'webp'])]
