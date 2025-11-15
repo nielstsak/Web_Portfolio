@@ -4,11 +4,8 @@ from django.contrib import admin
 from django.utils.html import mark_safe
 import sys
 from .models import (
-    # NOUVEAU
     EvenementChronologique,
     MediaProjet,
-    
-    # CONSERVÉS
     Presentation,
     PosteCible,
     Diplome,
@@ -41,7 +38,6 @@ class DiplomeAdmin(admin.ModelAdmin):
     
     def afficher_parchemin(self, diplome):
         if diplome.parchemin:
-            # Cloudinary renvoie 'image' même pour les PDF, donc l'URL est 'url'
             return mark_safe(f'<a href="{diplome.parchemin.url}" target="_blank">Voir justificatif</a>')
         return "Aucun justificatif"
     afficher_parchemin.short_description = 'Justificatif'
@@ -50,65 +46,65 @@ class DiplomeAdmin(admin.ModelAdmin):
 # --- NOUVEAU MODÈLE ---
 
 class MediaProjetInline(admin.TabularInline):
-    """
-    Permet d'ajouter plusieurs photos (carrousel) directement
-    sur la page d'un événement de type Projet.
-    """
     model = MediaProjet
-    extra = 1 # Affiche un slot vide par défaut
+    extra = 1
     verbose_name = "Média (Photo Projet)"
     verbose_name_plural = "Médias (Carrousel Photos)"
 
 
 class EvenementChronologiqueAdmin(admin.ModelAdmin):
-    """
-    Personnalise l'admin pour 'EvenementChronologique'.
-    Utilise 'fieldsets' et du JS pour afficher les champs conditionnels.
-    """
     list_display = ('titre', 'type', 'date_debut', 'date_fin')
     list_filter = ('type',)
     search_fields = ('titre', 'description')
     
     inlines = [MediaProjetInline]
 
-    # Définition des groupes de champs pour le JS
+    # Définition des groupes de champs pour le JS (CORRIGÉ)
     fieldsets = (
         ('Informations Communes', {
             'fields': ('titre', 'type', 'date_debut', 'date_fin', 'description')
         }),
-        # Chaque 'fieldset' suivant a une classe CSS (ex: 'grp-etudes')
-        # que le JS utilisera pour afficher/masquer.
-        ('Détails (Études)', {
+        # Groupe 1: [Etudes, Diplome, Projets Etudiant]
+        ('Détails (Contexte Académique/Projet)', {
             'classes': ('grp-etudes', 'grp-projets-etudiant', 'grp-diplome'),
             'fields': ('institution',)
         }),
+        # Groupe 2: [Etudes]
         ('Détails (Études)', {
             'classes': ('grp-etudes',),
             'fields': ('description_formation', 'competences_acquises')
         }),
+        # Groupe 3: [Diplome]
         ('Détails (Diplôme)', {
             'classes': ('grp-diplome',),
             'fields': ('url_parchemin',)
         }),
+        # Groupe 4: [Service civique]
         ('Détails (Service Civique)', {
             'classes': ('grp-service-civique',),
-            'fields': ('organisme_accueil', 'missions_principales')
+            'fields': ('organisme_accueil',) # 'missions_principales' retiré
         }),
+        # Groupe 5: [Projets (Tous)]
         ('Détails (Projets)', {
             'classes': ('grp-projets-etudiant', 'grp-projets-professionnels', 'grp-projets-personnels'),
             'fields': ('role', 'technologies', 'media_video', 'url_code_source', 'travaux_details')
         }),
+        # Groupe 6: [Activité rémunératrice]
         ('Détails (Activité Rémunératrice)', {
             'classes': ('grp-activite-remuneratrice',),
-            'fields': ('poste', 'missions_principales')
+            'fields': ('poste',) # 'missions_principales' retiré
+        }),
+        # Groupe 7 (CORRIGÉ): [Service civique, Activité rémunératrice]
+        ('Détails (Missions)', {
+            'classes': ('grp-service-civique', 'grp-activite-remuneratrice'),
+            'fields': ('missions_principales',) # 'missions_principales' est maintenant seul
         }),
     )
 
     class Media:
-        # Charge jQuery (fourni par Django) avant le script personnalisé
         js = (
             '//ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js', 
-            'admin/js/evenement_admin.js', # Ce fichier sera créé à l'étape suivante
+            'admin/js/evenement_admin.js', # Ce fichier est nécessaire
         )
 
 
@@ -117,5 +113,5 @@ admin.site.register(EvenementChronologique, EvenementChronologiqueAdmin)
 admin.site.register(MediaProjet)
 admin.site.register(Presentation, PresentationAdmin)
 admin.site.register(PosteCible)
-admin.site.register(Diplome, DiplomeAdmin) # Utilise le nouvel Admin
+admin.site.register(Diplome, DiplomeAdmin)
 admin.site.register(CompetenceTechnologique, CompetenceTechnologiqueAdmin)
