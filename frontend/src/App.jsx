@@ -1,78 +1,62 @@
-// frontend/src/components/SectionChronologie.jsx
+// frontend/src/App.jsx
 
-import { Container, Typography, Box, Divider } from '@mui/material';
-import { motion } from 'framer-motion';
-// Imports décommentés
-import ControlesFiltrage from './chronologie/ControlesFiltrage';
-import GrilleEvenements from './chronologie/GrilleEvenements';
-import CalendrierActivite from './chronologie/CalendrierActivite';
+import { useState, useCallback, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { ThemeProvider } from '@mui/material/styles';
+import { Box, CssBaseline } from '@mui/material';
+import theme from './theme';
+import Navbar from './components/Navbar';
+import Footer from './components/Footer';
+import LandingPage from './pages/LandingPage';
+import AnimatedBackground from './components/AnimatedBackground';
+import { useAppStore } from './store/appStore';
 
-// Gère l'animation d'apparition en cascade des éléments.
-const variantsConteneur = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { when: "beforeChildren", staggerChildren: 0.1 },
-  },
-};
-
-// Animation pour chaque bloc (Filtres, Grille, Calendrier)
-const variantsElement = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
-};
+// Sections navigables de la page d'accueil (Mises à jour)
+const sections = ['introduction', 'chronologie'];
 
 /**
- * Section principale affichant la timeline chronologique (Filtres, Grille, Calendrier).
- * @param {{ evenementsFiltres: Array<object> }} props
+ * Composant racine de l'application.
  */
-function SectionChronologie({ evenementsFiltres }) {
+function App() {
+  const [sectionActive, setSectionActive] = useState(sections[0]);
+  const chargerToutesDonnees = useAppStore((state) => state.fetchAllData);
+
+  // Au premier chargement, récupère toutes les données de l'API.
+  useEffect(() => {
+    chargerToutesDonnees();
+  }, [chargerToutesDonnees]);
+
+  // Gère la navigation entre les sections (passée à Navbar et LandingPage)
+  const gererNavigation = useCallback((section) => {
+    if (sections.includes(section) && section !== sectionActive) {
+      setSectionActive(section);
+    }
+  }, [sectionActive]);
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4, height: '100%', display: 'flex', flexDirection: 'column' }}>
-      {/* Utilise 'flexGrow: 1' pour que le conteneur motion prenne la hauteur */}
-      <motion.div 
-        variants={variantsConteneur} 
-        initial="hidden" 
-        animate="visible" 
-        style={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}
-      >
-        
-        <motion.div variants={variantsElement}>
-          <Typography variant="h3" component="h2" sx={{ mb: 3, textAlign: 'center', fontWeight: 'bold' }}>
-            Chronologie
-          </Typography>
-        </motion.div>
-
-        {/* Filtres (Tâche 12) */}
-        <motion.div variants={variantsElement}>
-          <ControlesFiltrage />
-        </motion.div>
-        
-        {/* Grille des événements (Tâche 13) */}
-        {/* 'flexGrow: 1' permet à la grille de prendre la place restante */}
-        {/* 'overflowY: auto' active le défilement *à l'intérieur* de la grille */}
-        <motion.div 
-          variants={variantsElement} 
-          style={{ flexGrow: 1, overflowY: 'auto', padding: '2px', minHeight: '400px' }}
-        >
-          <GrilleEvenements evenements={evenementsFiltres} />
-        </motion.div>
-
-        {/* Calendrier (Tâche 15) */}
-        <motion.div variants={variantsElement}>
-          <Divider sx={{ my: 4 }}>
-            <Typography variant="overline">Calendrier d'activité</Typography>
-          </Divider>
-        </motion.div>
-
-        <motion.div variants={variantsElement}>
-          <CalendrierActivite evenements={evenementsFiltres} />
-        </motion.div>
-
-      </motion.div>
-    </Container>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Router>
+        <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative' }}>
+          <AnimatedBackground />
+          <Navbar onNaviguer={gererNavigation} sectionActive={sectionActive} />
+          
+          <Box component="main" sx={{ flexGrow: 1, zIndex: 1, width: '100%', display: 'flex', flexDirection: 'column' }}>
+            <Routes>
+              {/* Route principale pour la LandingPage */}
+              <Route 
+                path="/" 
+                element={<LandingPage sectionActive={sectionActive} onNaviguer={gererNavigation} />} 
+              />
+              {/* La route /project/:idProjet est supprimée */}
+            </Routes>
+          </Box>
+          
+          <Footer />
+        </Box>
+      </Router>
+    </ThemeProvider>
   );
 }
 
-export default SectionChronologie;
+export default App;
