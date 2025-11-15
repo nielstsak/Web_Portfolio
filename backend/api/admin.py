@@ -6,44 +6,26 @@ import sys
 from .models import (
     # NOUVEAU
     EvenementChronologique,
+    MediaProjet,
     
     # CONSERVÉS
     Presentation,
     PosteCible,
     Diplome,
     CompetenceTechnologique,
-    
-    # SUPPRIMÉS (retirés des imports)
-    # Projet,
-    # Parcours,
-    # TravailEffectue,
 )
 from django.contrib import messages
-
 
 # --- MODÈLES CONSERVÉS ---
 
 class CompetenceTechnologiqueAdmin(admin.ModelAdmin):
-    """Personnalise l'affichage en liste du modèle CompetenceTechnologique."""
     list_display = ('nom', 'afficher_apercu_logo')
     
     def afficher_apercu_logo(self, competence):
-        """Affiche un petit aperçu du logo dans la liste de l'interface d'administration."""
         if competence.logo:
             return mark_safe(f'<img src="{competence.logo.url}" alt="{competence.nom}" height="40" >')
         return "Aucun logo"
     afficher_apercu_logo.short_description = 'Aperçu du Logo'
-
-    def save_model(self, request, obj, form, change):
-        print(f"[ADMIN] Tentative de sauvegarde compétence: {obj.nom}", file=sys.stdout)
-        if 'logo' in request.FILES:
-             print(f"[ADMIN] Fichier logo reçu: {request.FILES['logo'].name}", file=sys.stdout)
-        
-        super().save_model(request, obj, form, change)
-        
-        if obj.logo:
-            print(f"[ADMIN] URL Logo après sauvegarde: {getattr(obj.logo, 'url', 'Pas dURL')}", file=sys.stdout)
-
 
 class PresentationAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
@@ -54,58 +36,86 @@ class PresentationAdmin(admin.ModelAdmin):
         if obj.photo:
              print(f"[ADMIN] URL Photo après sauvegarde: {getattr(obj.photo, 'url', 'Pas dURL')}", file=sys.stdout)
 
-# NOUVELLE CONFIG (pour le champ 'parchemin' ajouté)
 class DiplomeAdmin(admin.ModelAdmin):
     list_display = ('titre', 'institution', 'afficher_parchemin')
     
     def afficher_parchemin(self, diplome):
         if diplome.parchemin:
+            # Cloudinary renvoie 'image' même pour les PDF, donc l'URL est 'url'
             return mark_safe(f'<a href="{diplome.parchemin.url}" target="_blank">Voir justificatif</a>')
         return "Aucun justificatif"
     afficher_parchemin.short_description = 'Justificatif'
 
+
 # --- NOUVEAU MODÈLE ---
 
+class MediaProjetInline(admin.TabularInline):
+    """
+    Permet d'ajouter plusieurs photos (carrousel) directement
+    sur la page d'un événement de type Projet.
+    """
+    model = MediaProjet
+    extra = 1 # Affiche un slot vide par défaut
+    verbose_name = "Média (Photo Projet)"
+    verbose_name_plural = "Médias (Carrousel Photos)"
+
+
 class EvenementChronologiqueAdmin(admin.ModelAdmin):
-    """Configuration de base pour le nouveau modèle chronologique."""
+    """
+    Personnalise l'admin pour 'EvenementChronologique'.
+    Utilise 'fieldsets' et du JS pour afficher les champs conditionnels.
+    """
     list_display = ('titre', 'type', 'date_debut', 'date_fin')
     list_filter = ('type',)
-    search_fields = ('titre', 'description', 'specificites')
+    search_fields = ('titre', 'description')
     
-    # Instructions pour l'édition du JSON (rappel)
+    inlines = [MediaProjetInline]
+
+    # Définition des groupes de champs pour le JS
     fieldsets = (
-        (None, {
+        ('Informations Communes', {
             'fields': ('titre', 'type', 'date_debut', 'date_fin', 'description')
         }),
-        ('Données Spécifiques (JSON)', {
-            'classes': ('collapse',),
-            'fields': ('specificites',),
-            'description': """
-                <div style="background-color: #f0f0f0; padding: 10px; border-radius: 5px; margin-top: 10px;">
-                    <strong>Rappel de la structure JSON attendue par type :</strong>
-                    <ul>
-                        <li><strong>Etudes:</strong> {"institution": "...", "description_formation": "...", "competences_acquises": ["..."]}</li>
-                        <li><strong>Diplome:</strong> {"institution": "...", "url_parchemin": "..."}</li>
-                        <li><strong>Service civique:</strong> {"organisme_accueil": "...", "missions_principales": ["..."]}</li>
-                        <li><strong>Projets (Tous):</strong> {"role": "...", "technologies": ["..."], "media": {"url_video": "..." ou "urls_photos": ["..."]}, "url_code_source": "...", "travaux_details": [{"sous_titre": "...", "description": "..."}]}</li>
-                        <li><strong>Activité rémunératrice:</strong> {"poste": "...", "missions_principales": ["..."]}</li>
-                    </ul>
-                </div>
-            """
+        # Chaque 'fieldset' suivant a une classe CSS (ex: 'grp-etudes')
+        # que le JS utilisera pour afficher/masquer.
+        ('Détails (Études)', {
+            'classes': ('grp-etudes', 'grp-projets-etudiant', 'grp-diplome'),
+            'fields': ('institution',)
+        }),
+        ('Détails (Études)', {
+            'classes': ('grp-etudes',),
+            'fields': ('description_formation', 'competences_acquises')
+        }),
+        ('Détails (Diplôme)', {
+            'classes': ('grp-diplome',),
+            'fields': ('url_parchemin',)
+        }),
+        ('Détails (Service Civique)', {
+            'classes': ('grp-service-civique',),
+            'fields': ('organisme_accueil', 'missions_principales')
+        }),
+        ('Détails (Projets)', {
+            'classes': ('grp-projets-etudiant', 'grp-projets-professionnels', 'grp-projets-personnels'),
+            'fields': ('role', 'technologies', 'media_video', 'url_code_source', 'travaux_details')
+        }),
+        ('Détails (Activité Rémunératrice)', {
+            'classes': ('grp-activite-remuneratrice',),
+            'fields': ('poste', 'missions_principales')
         }),
     )
 
-# --- SUPPRESSIONS (retirées) ---
-# TravailEffectueInline
-# ProjetAdmin
+    class Media:
+        # Charge jQuery (fourni par Django) avant le script personnalisé
+        js = (
+            '//ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js', 
+            'admin/js/evenement_admin.js', # Ce fichier sera créé à l'étape suivante
+        )
 
-# --- Enregistrement des modèles sur le site d'administration Django ---
-admin.site.register(EvenementChronologique, EvenementChronologiqueAdmin) # NOUVEAU
+
+# --- Enregistrement des modèles ---
+admin.site.register(EvenementChronologique, EvenementChronologiqueAdmin)
+admin.site.register(MediaProjet)
 admin.site.register(Presentation, PresentationAdmin)
 admin.site.register(PosteCible)
-admin.site.register(Diplome, DiplomeAdmin) # MIS A JOUR
+admin.site.register(Diplome, DiplomeAdmin) # Utilise le nouvel Admin
 admin.site.register(CompetenceTechnologique, CompetenceTechnologiqueAdmin)
-
-# SUPPRIMÉS
-# admin.site.register(Projet, ProjetAdmin)
-# admin.site.register(Parcours)

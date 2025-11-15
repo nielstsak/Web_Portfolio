@@ -48,11 +48,9 @@ class Presentation(models.Model):
 
 class PosteCible(models.Model):
     nom = models.CharField(max_length=100)
-
     class Meta:
         verbose_name = "Poste Ciblé"
         verbose_name_plural = "Postes Ciblés"
-
     def __str__(self):
         return self.nom
 
@@ -60,37 +58,34 @@ class Diplome(models.Model):
     """Modèle conservé pour les diplômes (utilisé dans la section Introduction)."""
     titre = models.CharField(max_length=200)
     institution = models.CharField(max_length=200)
-    # Champ ajouté pour le lien vers le justificatif
     parchemin = CloudinaryField(
-        resource_type='image', # Cloudinary gère 'image' et 'raw' (pdf)
+        resource_type='image', # Gère PDF et images
         folder='diplomes',
         null=True,
         blank=True,
         help_text="Lien vers le PDF ou l'image du diplôme."
     )
-
     def __str__(self):
         return self.titre
 
-# --- NOUVEAU MODÈLE ---
+# --- NOUVEAU MODÈLE UNIFIÉ (Structure Corrigée) ---
 
 class EvenementChronologique(models.Model):
     """
-    Modèle unifié remplaçant Projet et Parcours.
-    Capture toutes les expériences (pro, perso, études) dans une timeline.
+    Modèle unifié remplaçant Projet et Parcours, avec des champs distincts 
+    pour une meilleure expérience dans l'interface d'administration.
     """
     
-    # Définition des types d'événements
     class TypeEvenement(models.TextChoices):
         ETUDES = 'Etudes', 'Études'
-        DIPLOME = 'Diplome', 'Diplôme' # Lié à l'obtention, différent du modèle Diplome
+        DIPLOME = 'Diplome', 'Diplôme'
         SERVICE_CIVIQUE = 'Service civique', 'Service civique'
         PROJETS_ETUDIANT = 'Projets Etudiant', 'Projets Étudiant'
         PROJETS_PROFESSIONNELS = 'Projets Professionnels', 'Projets Professionnels'
-        PROJETS_PERSONNELS = 'Projets Personnels', 'Projets Personnels' # Type ajouté
+        PROJETS_PERSONNELS = 'Projets Personnels', 'Projets Personnels'
         ACTIVITE_REMUNERATRICE = 'Activité rémunératrice', 'Activité rémunératrice'
 
-    # Champs communs
+    # --- Champs Communs ---
     titre = models.CharField(max_length=255, verbose_name="Titre")
     date_debut = models.DateField()
     date_fin = models.DateField(null=True, blank=True, help_text="Laisser vide si en cours ou ponctuel.")
@@ -99,30 +94,67 @@ class EvenementChronologique(models.Model):
         choices=TypeEvenement.choices,
         default=TypeEvenement.PROJETS_PROFESSIONNELS
     )
-    
-    # Description/Introduction (principalement pour les Projets)
     description = models.TextField(
         verbose_name="Description (Introduction)", 
         blank=True,
         help_text="Utilisé comme introduction pour les projets."
     )
+
+    # --- Champs Spécifiques (tous 'nullable' et gérés par l'admin) ---
+
+    # Types: Etudes, Diplome, Projets Etudiant
+    institution = models.CharField(max_length=255, blank=True, null=True, help_text="[Etudes, Diplome, Projets Etudiant]")
     
-    # Données spécifiques à chaque type
-    specificites = models.JSONField(
-        default=dict,
-        blank=True,
-        help_text="Données variables selon le type (voir documentation de la structure)"
-    )
+    # Type: Etudes
+    description_formation = models.TextField(blank=True, null=True, help_text="[Etudes]")
+    competences_acquises = models.JSONField(default=list, blank=True, help_text="[Etudes] (Liste de textes)")
+
+    # Type: Diplome
+    url_parchemin = CloudinaryField(resource_type='image', folder='parchemins_timeline', null=True, blank=True, help_text="[Diplome] (Upload PDF/Image)")
+
+    # Type: Service civique
+    organisme_accueil = models.CharField(max_length=255, blank=True, null=True, help_text="[Service civique]")
+    missions_principales = models.JSONField(default=list, blank=True, help_text="[Service civique, Activité rémunératrice] (Liste de textes)")
+
+    # Types: Projets (Tous)
+    role = models.CharField(max_length=255, blank=True, null=True, help_text="[Projets (Tous)]")
+    technologies = models.JSONField(default=list, blank=True, help_text="[Projets (Tous)] (Liste de textes)")
+    media_video = CloudinaryField(resource_type='video', folder='projets_videos', null=True, blank=True, help_text="[Projets (Tous)] (Si vidéo)")
+    url_code_source = models.URLField(max_length=500, blank=True, null=True, help_text="[Projets (Tous)] (Lien GitHub, etc.)")
+    travaux_details = models.JSONField(default=list, blank=True, help_text="[Projets (Tous)] (Liste d'objets: [{'sous_titre': '...', 'description': '...'}])")
+
+    # Type: Activité rémunératrice
+    poste = models.CharField(max_length=255, blank=True, null=True, help_text="[Activité rémunératrice]")
 
     class Meta:
         verbose_name = "Événement Chronologique"
         verbose_name_plural = "Événements Chronologiques"
-        ordering = ['-date_debut'] # Tri par défaut (plus récent en premier)
+        ordering = ['-date_debut']
 
     def __str__(self):
         return f"[{self.get_type_display()}] {self.titre} ({self.date_debut})"
 
-# --- MODÈLES SUPPRIMÉS (retirés) ---
-# Projet
-# TravailEffectue
-# Parcours
+class MediaProjet(models.Model):
+    """
+    Modèle séparé pour gérer les galeries d'images (carrousel) 
+    pour les événements de type Projet.
+    """
+    evenement = models.ForeignKey(
+        EvenementChronologique, 
+        related_name='media_photos', 
+        on_delete=models.CASCADE,
+        limit_choices_to={'type__in': [
+            EvenementChronologique.TypeEvenement.PROJETS_ETUDIANT,
+            EvenementChronologique.TypeEvenement.PROJETS_PROFESSIONNELS,
+            EvenementChronologique.TypeEvenement.PROJETS_PERSONNELS,
+        ]}
+    )
+    image = CloudinaryField(resource_type='image', folder='projets_photos')
+    legende = models.CharField(max_length=255, blank=True, null=True)
+
+    class Meta:
+        verbose_name = "Média (Photo Projet)"
+        verbose_name_plural = "Médias (Photos Projet)"
+
+    def __str__(self):
+        return f"Photo pour {self.evenement.titre}"
