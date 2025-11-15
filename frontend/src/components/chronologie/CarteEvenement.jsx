@@ -3,17 +3,16 @@
 import { useState } from 'react';
 import { Paper, Typography, Box } from '@mui/material';
 import { motion } from 'framer-motion';
-import ModaleEvenement from './ModaleEvenement'; // Sera créé à l'étape 14
+import ModaleEvenement from './ModaleEvenement'; 
 
 // Mappage des couleurs (HEX pour la bordure)
 const COULEURS_TYPES = {
-  'Etudes': '#0288d1', // info
-  'Diplome': '#0288d1', // info
-  'Service civique': '#9c27b0', // secondary
-  'Projets Etudiant': '#2e7d32', // success
-  'Projets Professionnels': '#2e7d32', // success
-  'Projets Personnels': '#2e7d32', // success
+  'Formation': '#0288d1', // info
   'Activité rémunératrice': '#ed6c02', // warning
+  'Service civique': '#9c27b0', // secondary
+  'Projets Professionnels': '#2e7d32', // success
+  'Projets Etudiant': '#2e7d32', // success
+  'Projets Personnels': '#2e7d32', // success
 };
 
 // Formate les dates (ex: "Janv 2024" ou "Janv 2024 ⟶ Fév 2025")
@@ -73,16 +72,16 @@ function CarteEvenement({ evenement }) {
             </Typography>
           </Box>
           
-          {/* Contenu principal */}
+          {/* Contenu principal (titre normalisé) */}
           <Typography variant="h6" component="h3" sx={{ fontWeight: 600, mb: 1 }}>
             {evenement.titre}
           </Typography>
           
-          {/* Affiche l'introduction (si c'est un projet) */}
+          {/* Description (normalisée) */}
           {evenement.description && (
              <Typography variant="body2" color="text.secondary" sx={{ flexGrow: 1 }}>
               {/* Coupe la description pour l'aperçu */}
-              {evenement.description.substring(0, 120)}...
+              {String(evenement.description).substring(0, 120)}...
             </Typography>
           )}
         </Paper>

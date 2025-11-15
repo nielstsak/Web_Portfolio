@@ -4,15 +4,18 @@ import { Box, Typography, Paper, Tooltip } from '@mui/material';
 
 // Mappage des couleurs (HEX pour la cohérence)
 const COULEURS_TYPES = {
-  'Etudes': '#0288d1',
-  'Diplome': '#0288d1',
+  'Formation': '#0288d1',
+  'Activité rémunératrice': '#ed6c02',
   'Service civique': '#9c27b0',
   'Projets Etudiant': '#2e7d32',
   'Projets Professionnels': '#2e7d32',
   'Projets Personnels': '#2e7d32',
-  'Activité rémunératrice': '#ed6c02',
 };
 
+// ... (le reste du fichier 'CalendrierActivite.jsx' est inchangé)
+// ... (obtenirPlageAnnees, estActifCeMois, et le composant CalendrierActivite)
+
+// ... (coller le reste du fichier original ici)
 // Constantes pour la grille
 const MOIS = ['Janv', 'Fév', 'Mars', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sept', 'Oct', 'Nov', 'Déc'];
 

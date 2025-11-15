@@ -1,22 +1,22 @@
 # backend/api/serializers.py
 from rest_framework import serializers
 from .models import (
-    # NOUVEAU
-    EvenementChronologique,
-    
     # CONSERVÉS
     Presentation,
     PosteCible,
     Diplome,
     CompetenceTechnologique,
 
-    # SUPPRIMÉS (retirés des imports)
-    # Projet,
-    # Parcours,
-    # TravailEffectue,
+    # NOUVEAUX MODÈLES
+    Formation, 
+    ActiviteProfessionnelle, 
+    ServiceCivique,
+    ProjetProfessionnel, MediaProjetProfessionnel,
+    ProjetEtudiant, MediaProjetEtudiant,
+    ProjetPersonnel, MediaProjetPersonnel,
 )
 
-# --- SÉRIALISEURS CONSERVÉS (Mis à jour) ---
+# --- SÉRIALISEURS CONSERVÉS (INTRODUCTION) ---
 
 class CompetenceTechnologiqueSerializer(serializers.ModelSerializer):
     """Sérialiseur pour le modèle CompetenceTechnologique."""
@@ -41,26 +41,81 @@ class PosteCibleSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class DiplomeSerializer(serializers.ModelSerializer):
-    """Sérialiseur pour le modèle Diplome."""
-    # Champ 'parchemin' ajouté (CloudinaryField est traité comme FileField)
+    """Sérialiseur pour le modèle Diplome (Introduction)."""
     parchemin = serializers.FileField(use_url=True, required=False)
 
     class Meta:
         model = Diplome
-        fields = ['id', 'titre', 'institution', 'parchemin'] # Mise à jour explicite
+        fields = ['id', 'titre', 'institution', 'parchemin']
 
 
-# --- NOUVEAU SÉRIALISEUR ---
+# --- NOUVEAUX SÉRIALISEURS (CHRONOLOGIE) ---
 
-class EvenementChronologiqueSerializer(serializers.ModelSerializer):
-    """Sérialiseur pour le nouveau modèle EvenementChronologique."""
+# 1. Formation
+class FormationSerializer(serializers.ModelSerializer):
+    justificatif = serializers.FileField(use_url=True, required=False)
     class Meta:
-        model = EvenementChronologique
-        # Inclut titre, description, dates, type, specificites
-        fields = '__all__' 
+        model = Formation
+        fields = '__all__'
 
+# 2. Activité Professionnelle
+class ActiviteProfessionnelleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ActiviteProfessionnelle
+        fields = '__all__'
 
-# --- SÉRIALISEURS SUPPRIMÉS (retirés) ---
-# class TravailEffectueSerializer(serializers.ModelSerializer): ...
-# class ProjetSerializer(serializers.ModelSerializer): ...
-# class ParcoursSerializer(serializers.ModelSerializer): ...
+# 3. Service Civique
+class ServiceCiviqueSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ServiceCivique
+        fields = '__all__'
+
+# --- Sérialiseurs de Projets (avec médias imbriqués) ---
+
+# 4. Projet Professionnel
+class MediaProjetProfessionnelSerializer(serializers.ModelSerializer):
+    image = serializers.FileField(use_url=True)
+    class Meta:
+        model = MediaProjetProfessionnel
+        fields = ['id', 'image', 'legende']
+
+class ProjetProfessionnelSerializer(serializers.ModelSerializer):
+    media_photos = MediaProjetProfessionnelSerializer(many=True, read_only=True)
+    media_video = serializers.FileField(use_url=True, required=False)
+    code_source_zip = serializers.FileField(use_url=True, required=False)
+
+    class Meta:
+        model = ProjetProfessionnel
+        fields = '__all__'
+
+# 5. Projet Étudiant
+class MediaProjetEtudiantSerializer(serializers.ModelSerializer):
+    image = serializers.FileField(use_url=True)
+    class Meta:
+        model = MediaProjetEtudiant
+        fields = ['id', 'image', 'legende']
+
+class ProjetEtudiantSerializer(serializers.ModelSerializer):
+    media_photos = MediaProjetEtudiantSerializer(many=True, read_only=True)
+    media_video = serializers.FileField(use_url=True, required=False)
+    code_source_zip = serializers.FileField(use_url=True, required=False)
+
+    class Meta:
+        model = ProjetEtudiant
+        fields = '__all__'
+
+# 6. Projet Personnel
+class MediaProjetPersonnelSerializer(serializers.ModelSerializer):
+    image = serializers.FileField(use_url=True)
+    class Meta:
+        model = MediaProjetPersonnel
+        fields = ['id', 'image', 'legende']
+
+class ProjetPersonnelSerializer(serializers.ModelSerializer):
+    media_photos = MediaProjetPersonnelSerializer(many=True, read_only=True)
+    media_video = serializers.FileField(use_url=True, required=False)
+    code_source_zip = serializers.FileField(use_url=True, required=False)
+
+    class Meta:
+        model = ProjetPersonnel
+        fields = '__all__'

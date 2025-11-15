@@ -6,24 +6,22 @@ import { motion } from 'framer-motion';
 
 // Doit correspondre à TOUS_LES_TYPES dans appStore.jsx
 const TYPES_EVENEMENTS = [
-  'Etudes',
-  'Diplome',
+  'Formation',
+  'Activité rémunératrice',
   'Service civique',
-  'Projets Etudiant',
   'Projets Professionnels',
-  'Projets Personnels',
-  'Activité rémunératrice'
+  'Projets Etudiant',
+  'Projets Personnels'
 ];
 
-// Mappage des couleurs pour la cohérence visuelle
+// Mappage des couleurs (MUI color props)
 const COULEURS_TYPES = {
-  'Etudes': 'info',
-  'Diplome': 'info',
-  'Service civique': 'secondary',
-  'Projets Etudiant': 'success',
-  'Projets Professionnels': 'success',
-  'Projets Personnels': 'success',
+  'Formation': 'info',
   'Activité rémunératrice': 'warning',
+  'Service civique': 'secondary',
+  'Projets Professionnels': 'success',
+  'Projets Etudiant': 'success',
+  'Projets Personnels': 'success',
 };
 
 /**

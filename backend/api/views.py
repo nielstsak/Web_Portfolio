@@ -1,55 +1,39 @@
 # backend/api/views.py
 
-import zipfile
-import io
-from pathlib import Path
 from django.conf import settings
-from rest_framework import viewsets, status, permissions
-from rest_framework.decorators import action
-from rest_framework.response import Response
+from rest_framework import viewsets, permissions
 from .models import (
-    # NOUVEAU
-    EvenementChronologique,
-    
     # CONSERVÉS
     Presentation,
     PosteCible,
     Diplome,
     CompetenceTechnologique,
 
-    # SUPPRIMÉS (retirés des imports)
-    # Projet,
-    # Parcours,
+    # NOUVEAUX MODÈLES
+    Formation,
+    ActiviteProfessionnelle,
+    ServiceCivique,
+    ProjetProfessionnel,
+    ProjetEtudiant,
+    ProjetPersonnel,
 )
 from .serializers import (
-    # NOUVEAU
-    EvenementChronologiqueSerializer,
-
     # CONSERVÉS
     PresentationSerializer,
     PosteCibleSerializer,
     DiplomeSerializer,
     CompetenceTechnologiqueSerializer,
 
-    # SUPPRIMÉS (retirés des imports)
-    # ProjetSerializer,
-    # ParcoursSerializer,
+    # NOUVEAUX SÉRIALISEURS
+    FormationSerializer,
+    ActiviteProfessionnelleSerializer,
+    ServiceCiviqueSerializer,
+    ProjetProfessionnelSerializer,
+    ProjetEtudiantSerializer,
+    ProjetPersonnelSerializer,
 )
 
-# --- NOUVEAU VIEWSET ---
-
-class EvenementChronologiqueViewSet(viewsets.ReadOnlyModelViewSet):
-    """ViewSet pour le nouveau modèle EvenementChronologique."""
-    queryset = EvenementChronologique.objects.all().order_by('-date_debut')
-    serializer_class = EvenementChronologiqueSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    
-    # NOTE : Les actions personnalisées pour le code source ('source-code-tree', 'source-code-file')
-    # ont été retirées car elles dépendaient de l'ancien modèle 'Projet'.
-    # Si cette fonctionnalité doit être reportée, elle doit être réimplémentée
-    # en utilisant le champ 'specificites' du nouveau modèle.
-
-# --- VIEWSETS CONSERVÉS ---
+# --- VIEWSETS CONSERVÉS (INTRODUCTION) ---
 
 class PresentationViewSet(viewsets.ReadOnlyModelViewSet):
     """ViewSet pour l'accès en lecture seule aux objets Presentation."""
@@ -64,7 +48,7 @@ class PosteCibleViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 class DiplomeViewSet(viewsets.ReadOnlyModelViewSet):
-    """ViewSet pour l'accès en lecture seule aux objets Diplome."""
+    """ViewSet pour l'accès en lecture seule aux objets Diplome (Introduction)."""
     queryset = Diplome.objects.all()
     serializer_class = DiplomeSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
@@ -75,6 +59,41 @@ class CompetenceTechnologiqueViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = CompetenceTechnologiqueSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
-# --- VIEWSETS SUPPRIMÉS (retirés) ---
-# class ProjetViewSet(viewsets.ReadOnlyModelViewSet): ...
-# class ParcoursViewSet(viewsets.ReadOnlyModelViewSet): ...
+
+# --- NOUVEAUX VIEWSETS (CHRONOLOGIE) ---
+
+class FormationViewSet(viewsets.ReadOnlyModelViewSet):
+    """API endpoint pour les formations."""
+    queryset = Formation.objects.all()
+    serializer_class = FormationSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+class ActiviteProfessionnelleViewSet(viewsets.ReadOnlyModelViewSet):
+    """API endpoint pour les activités professionnelles."""
+    queryset = ActiviteProfessionnelle.objects.all()
+    serializer_class = ActiviteProfessionnelleSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+class ServiceCiviqueViewSet(viewsets.ReadOnlyModelViewSet):
+    """API endpoint pour les services civiques."""
+    queryset = ServiceCivique.objects.all()
+    serializer_class = ServiceCiviqueSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+class ProjetProfessionnelViewSet(viewsets.ReadOnlyModelViewSet):
+    """API endpoint pour les projets professionnels."""
+    queryset = ProjetProfessionnel.objects.all()
+    serializer_class = ProjetProfessionnelSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+class ProjetEtudiantViewSet(viewsets.ReadOnlyModelViewSet):
+    """API endpoint pour les projets étudiants."""
+    queryset = ProjetEtudiant.objects.all()
+    serializer_class = ProjetEtudiantSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+class ProjetPersonnelViewSet(viewsets.ReadOnlyModelViewSet):
+    """API endpoint pour les projets personnels."""
+    queryset = ProjetPersonnel.objects.all()
+    serializer_class = ProjetPersonnelSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]

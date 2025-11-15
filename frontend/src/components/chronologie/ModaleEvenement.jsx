@@ -1,7 +1,9 @@
 // frontend/src/components/chronologie/ModaleEvenement.jsx
 
-import { Box, Modal, Paper, Typography, IconButton, Divider, Chip, Link, List, ListItemText } from '@mui/material';
+import { Box, Modal, Paper, Typography, IconButton, Divider, Chip, Link, List, ListItemText, Button } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import CodeIcon from '@mui/icons-material/Code'; // Pour le lien vers le code
+import ArticleIcon from '@mui/icons-material/Article'; // Pour le justificatif
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Style du conteneur de la modale
@@ -25,13 +27,38 @@ const variantsDropIn = {
 };
 
 /**
- * Helper interne pour afficher les données du JSON 'specificites'
+ * Helper interne pour afficher les listes de missions/travaux
+ */
+const AffichageMissions = ({ items, titre }) => {
+  if (!items || items.length === 0) return null;
+  
+  return (
+    <Box sx={{ my: 2 }}>
+      <Typography variant="h6" gutterBottom>{titre}</Typography>
+      {items.map((item, idx) => (
+        <Box key={idx} sx={{ mb: 1.5 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>{item.sous_titre}</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
+            {item.description}
+          </Typography>
+        </Box>
+      ))}
+    </Box>
+  );
+};
+
+/**
+ * Helper interne pour afficher les données (précédemment 'specificites')
  * en fonction du type d'événement.
  */
 const AffichageSpecificites = ({ type, specificites }) => {
+
   // Types "Projet" (Pro, Etudiant, Perso)
   if (type.startsWith('Projets')) {
-    const { institution, role, technologies, media, url_code_source, travaux_details } = specificites;
+    const { 
+      institution, role, technologies, media_video, 
+      media_photos, code_source_zip, travail_effectue 
+    } = specificites;
     
     return (
       <Box>
@@ -47,51 +74,47 @@ const AffichageSpecificites = ({ type, specificites }) => {
           </Box>
         )}
 
-        {media && (media.url_video || media.urls_photos?.length > 0) && (
+        {(media_video || media_photos?.length > 0) && (
           <Box sx={{ my: 2 }}>
             <Typography variant="h6" gutterBottom>Média</Typography>
             {/* Cas Vidéo */}
-            {media.url_video && (
+            {media_video && (
               <Box 
                 component="video" 
-                src={media.url_video} 
+                src={media_video} 
                 controls 
                 muted 
                 playsInline 
                 sx={{ width: '100%', borderRadius: 1, backgroundColor: '#000' }} 
               />
             )}
-            {/* Cas Photos (Carrousel non implémenté, affiche la première photo) */}
-            {media.urls_photos?.length > 0 && !media.url_video && (
+            {/* Cas Photos (Affiche la première photo) */}
+            {/* TODO: Implémenter un carrousel si plusieurs photos */}
+            {media_photos?.length > 0 && !media_video && (
                <Box 
                 component="img" 
-                src={media.urls_photos[0]} 
-                alt="Aperçu projet" 
+                src={media_photos[0].image} 
+                alt={media_photos[0].legende || "Aperçu projet"} 
                 sx={{ width: '100%', borderRadius: 1 }} 
               />
             )}
           </Box>
         )}
 
-        {/* Sections "Travail Détaillé" (sous-titres) */}
-        {travaux_details?.length > 0 && (
-          <Box sx={{ my: 2 }}>
-            <Typography variant="h6" gutterBottom>Travail Détaillé</Typography>
-            {travaux_details.map((travail, idx) => (
-              <Box key={idx} sx={{ mb: 1.5 }}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>{travail.sous_titre}</Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
-                  {travail.description}
-                </Typography>
-              </Box>
-            ))}
-          </Box>
-        )}
+        {/* Sections "Travail Détaillé" */}
+        <AffichageMissions items={travail_effectue} titre="Travail Détaillé" />
 
-        {url_code_source && (
-          <Link href={url_code_source} target="_blank" rel="noopener" sx={{ mt: 2 }}>
-            Voir le code source
-          </Link>
+        {code_source_zip && (
+          <Button 
+            variant="outlined" 
+            href={code_source_zip} 
+            target="_blank" 
+            rel="noopener" 
+            startIcon={<CodeIcon />}
+            sx={{ mt: 2 }}
+          >
+            Voir le code source (.zip)
+          </Button>
         )}
       </Box>
     );
@@ -99,39 +122,49 @@ const AffichageSpecificites = ({ type, specificites }) => {
 
   // Autres types d'événements
   switch (type) {
-    case 'Etudes':
+    case 'Formation':
       return (
-        <List dense>
-          <ListItemText primary="Institution" secondary={specificites.institution} />
-          <ListItemText primary="Description" secondary={specificites.description_formation} />
-          <ListItemText primary="Compétences" secondary={specificites.competences_acquises?.join(', ')} />
-        </List>
-      );
-    case 'Diplome':
-      return (
-         <List dense>
-          <ListItemText primary="Institution" secondary={specificites.institution} />
-          {specificites.url_parchemin && (
-             <Link href={specificites.url_parchemin} target="_blank" rel="noopener">Voir le parchemin</Link>
+        <Box>
+          <List dense>
+            <ListItemText primary="Institution" secondary={specificites.institution} />
+            <ListItemText primary="Description" secondary={specificites.description} sx={{ whiteSpace: 'pre-wrap' }} />
+          </List>
+          {specificites.justificatif && (
+            <Button 
+              variant="outlined" 
+              href={specificites.justificatif} 
+              target="_blank" 
+              rel="noopener" 
+              startIcon={<ArticleIcon />}
+              sx={{ mt: 2 }}
+            >
+              Voir le justificatif
+            </Button>
           )}
-        </List>
+        </Box>
       );
+      
     case 'Service civique':
        return (
-        <List dense>
-          <ListItemText primary="Organisme" secondary={specificites.organisme_accueil} />
-          <ListItemText primary="Missions" secondary={specificites.missions_principales?.join('; ')} />
-        </List>
+        <Box>
+          <List dense>
+            <ListItemText primary="Organisme" secondary={specificites.organisme_accueil} />
+          </List>
+          <AffichageMissions items={specificites.missions} titre="Missions" />
+        </Box>
       );
+      
     case 'Activité rémunératrice':
       return (
-        <List dense>
-          <ListItemText primary="Poste" secondary={specificites.poste} />
-          <ListItemText primary="Missions" secondary={specificites.missions_principales?.join('; ')} />
-        </List>
+        <Box>
+          <List dense>
+            <ListItemText primary="Poste" secondary={specificites.poste} />
+          </List>
+          <AffichageMissions items={specificites.missions} titre="Missions" />
+        </Box>
       );
+      
     default:
-      // Cas où 'specificites' est vide ou le type n'est pas géré
       return null;
   }
 };
@@ -184,7 +217,7 @@ function ModaleEvenement({ evenement, ouvert, onFermer }) {
                 </Typography>
               )}
               
-              {/* Détails spécifiques (JSON) */}
+              {/* Détails spécifiques (normalisés) */}
               <AffichageSpecificites 
                 type={evenement.type} 
                 specificites={evenement.specificites} 
