@@ -1,16 +1,21 @@
 // frontend/src/pages/LandingPage.jsx
 
 import { useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+// useNavigate est retiré, la navigation vers un projet spécifique n'est plus gérée ici.
 import { Box } from '@mui/material';
 import { AnimatePresence, motion } from 'framer-motion';
 import Introduction from '../components/Introduction';
-import Parcours from '../components/Parcours';
-import ListeProjets from '../components/ProjectList'; // Renommé depuis ProjectList
 import { useAppStore } from '../store/appStore';
 
-// Ordre de navigation des sections pour le défilement.
-const sections = ['introduction', 'parcours', 'projets'];
+// NOUVEAU composant pour la section fusionnée
+import SectionChronologie from '../components/SectionChronologie'; 
+
+// SUPPRIMÉS
+// import Parcours from '../components/Parcours';
+// import ListeProjets from '../components/ProjectList'; 
+
+// L'ordre des sections est maintenant géré dans App.jsx
+const sections = ['introduction', 'chronologie'];
 
 // Variantes d'animation pour la transition entre les sections.
 const variantsSection = {
@@ -24,27 +29,25 @@ const variantsSection = {
  * @param {{ sectionActive: string, onNaviguer: function }} props
  */
 function LandingPage({ sectionActive, onNaviguer }) {
-  const navigation = useNavigate();
-  const projets = useAppStore((state) => state.projecs);
-  const donneesParcours = useAppStore((state) => state.parcoursData);
+  // Récupère les événements déjà filtrés depuis le store
+  const evenementsFiltres = useAppStore((state) => state.evenementsFiltres());
   
   const dernierAppel = useRef(0);
-  const delaiAntiRebond = 1000; // Délai (ms) pour limiter la fréquence de changement de section
+  const delaiAntiRebond = 1000; // Délai (ms) pour le throttle du scroll
 
-  const gererSelectionProjet = (idProjet) => {
-    navigation(`/project/${idProjet}`);
-  };
+  // La fonction 'gererSelectionProjet' est supprimée.
 
   // Gère la navigation entre les sections avec la molette de la souris.
   const gererDefilement = useCallback((evenement) => {
     const maintenant = Date.now();
-    // "Throttle" : Empêche les changements de section trop rapides.
+    // Empêche les changements de section trop rapides.
     if (maintenant - dernierAppel.current < delaiAntiRebond) {
       return;
     }
     dernierAppel.current = maintenant;
 
     const indexActuel = sections.indexOf(sectionActive);
+
     if (evenement.deltaY > 0 && indexActuel < sections.length - 1) { // Scroll vers le bas
       onNaviguer(sections[indexActuel + 1]);
     } else if (evenement.deltaY < 0 && indexActuel > 0) { // Scroll vers le haut
@@ -58,15 +61,14 @@ function LandingPage({ sectionActive, onNaviguer }) {
     return () => window.removeEventListener('wheel', gererDefilement);
   }, [gererDefilement]);
 
-  // Rend le composant de la section active.
+  // Rend le composant de la section active (MIS À JOUR).
   const afficherContenuSection = () => {
     switch (sectionActive) {
       case 'introduction':
         return <Introduction estVisible={true} />;
-      case 'parcours':
-        return <Parcours donneesParcours={donneesParcours} />;
-      case 'projets':
-        return <ListeProjets projets={projets} onSelectionnerProjet={gererSelectionProjet} />;
+      case 'chronologie':
+        // Remplace les anciens composants 'Parcours' et 'ListeProjets'
+        return <SectionChronologie evenementsFiltres={evenementsFiltres} />;
       default:
         return null;
     }
@@ -77,7 +79,7 @@ function LandingPage({ sectionActive, onNaviguer }) {
       {/* Gère l'animation de sortie (exit) et d'entrée (enter) */}
       <AnimatePresence mode="wait">
         <motion.div
-          // La clé 'key' est cruciale : elle dit à AnimatePresence que le composant a changé.
+          // La clé 'key' est cruciale pour AnimatePresence
           key={sectionActive}
           variants={variantsSection}
           initial="initial"

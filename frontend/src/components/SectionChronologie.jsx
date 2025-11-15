@@ -29,13 +29,21 @@ const variantsElement = {
 function SectionChronologie({ evenementsFiltres }) {
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4, height: '100%', display: 'flex', flexDirection: 'column' }}>
-      {/* Utilise 'flexGrow: 1' pour que le conteneur motion prenne la hauteur */}
+    <Container 
+      maxWidth="xl" 
+      sx={{ 
+        py: 4, 
+        height: '100%', 
+        display: 'flex', 
+        flexDirection: 'column' 
+      }}
+    >
+      {/* Conteneur motion principal qui gère la hauteur de la section */}
       <motion.div 
         variants={variantsConteneur} 
         initial="hidden" 
         animate="visible" 
-        style={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}
+        style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, minHeight: 0 }}
       >
         
         <motion.div variants={variantsElement}>
@@ -45,28 +53,34 @@ function SectionChronologie({ evenementsFiltres }) {
         </motion.div>
 
         {/* Filtres (Tâche 12) */}
-        <motion.div variants={variantsElement}>
+        <motion.div variants={variantsElement} style={{ flexShrink: 0 }}>
           <ControlesFiltrage />
         </motion.div>
         
         {/* Grille des événements (Tâche 13) */}
-        {/* 'flexGrow: 1' permet à la grille de prendre la place restante */}
-        {/* 'overflowY: auto' active le défilement *à l'intérieur* de la grille */}
+        {/* 'flexGrow: 1' et 'overflowY: auto' sont cruciaux */}
+        {/* 'minHeight: 0' est requis pour que flexbox gère correctement le débordement */}
         <motion.div 
           variants={variantsElement} 
-          style={{ flexGrow: 1, overflowY: 'auto', padding: '2px', minHeight: '400px' }}
+          style={{ 
+            flexGrow: 1, 
+            overflowY: 'auto', 
+            padding: '2px', 
+            minHeight: 0, 
+            maxHeight: 'calc(100vh - 400px)', // Limite la hauteur
+          }}
         >
           <GrilleEvenements evenements={evenementsFiltres} />
         </motion.div>
 
         {/* Calendrier (Tâche 15) */}
-        <motion.div variants={variantsElement}>
+        <motion.div variants={variantsElement} style={{ flexShrink: 0 }}>
           <Divider sx={{ my: 4 }}>
             <Typography variant="overline">Calendrier d'activité</Typography>
           </Divider>
         </motion.div>
 
-        <motion.div variants={variantsElement}>
+        <motion.div variants={variantsElement} style={{ flexShrink: 0 }}>
           <CalendrierActivite evenements={evenementsFiltres} />
         </motion.div>
 
