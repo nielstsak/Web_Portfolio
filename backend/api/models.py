@@ -2,13 +2,13 @@
 
 from django.db import models
 from django.core.validators import FileExtensionValidator
+from django.core.exceptions import ValidationError
 import sys
 from cloudinary.models import CloudinaryField
 
 # --- MODÈLES CONSERVÉS (POUR L'INTRODUCTION) ---
 
 class CompetenceTechnologique(models.Model):
-    """Représente une compétence technologique (ex: Python, React) avec son logo."""
     nom = models.CharField(max_length=100)
     logo = CloudinaryField(
         resource_type='image',
@@ -26,7 +26,6 @@ class CompetenceTechnologique(models.Model):
         return self.nom
 
 class Presentation(models.Model):
-    """Contient les informations générales de présentation (bio, photo, contact)."""
     texte = models.TextField()
     nom = models.CharField(max_length=100, default="John")
     prenom = models.CharField(max_length=100, default="Doe")
@@ -55,11 +54,10 @@ class PosteCible(models.Model):
         return self.nom
 
 class Diplome(models.Model):
-    """Modèle conservé pour les diplômes (utilisé dans la section Introduction)."""
     titre = models.CharField(max_length=200)
     institution = models.CharField(max_length=200)
     parchemin = CloudinaryField(
-        resource_type='image', # Gère PDF et images
+        resource_type='image', 
         folder='diplomes',
         null=True,
         blank=True,
@@ -73,7 +71,6 @@ class Diplome(models.Model):
 # --- Classes de Base Abstraites ---
 
 class BaseEvenement(models.Model):
-    """Modèle abstrait pour les champs de date communs."""
     date_debut = models.DateField()
     date_fin = models.DateField(null=True, blank=True, help_text="Laisser vide si en cours ou ponctuel.")
 
@@ -82,11 +79,15 @@ class BaseEvenement(models.Model):
         ordering = ['-date_debut']
 
 class BaseProjet(BaseEvenement):
-    """Modèle abstrait pour les champs communs aux trois types de projets."""
     titre = models.CharField(max_length=255)
     introduction = models.TextField(verbose_name="Introduction (Description)")
     role = models.CharField(max_length=255, blank=True)
-    technologies = models.JSONField(default=list, blank=True, help_text="Liste de textes")
+    technologies = models.ManyToManyField(
+        'CompetenceTechnologique',
+        blank=True,
+        related_name="%(class)s_projets",
+        help_text="Sélectionnez les technologies utilisées"
+    )
     media_video = CloudinaryField(
         resource_type='video', 
         folder='projets_videos', 
@@ -100,7 +101,7 @@ class BaseProjet(BaseEvenement):
     )
     travail_effectue = models.JSONField(
         default=list, blank=True, 
-        help_text="Liste d'objets: [{'sous_titre': '...', 'description': '...'}]"
+        help_text="Liste d'objets: [{'sous_titre': '...', 'descriptions': ['point 1', 'point 2']}]"
     )
 
     class Meta(BaseEvenement.Meta):
@@ -111,7 +112,6 @@ class BaseProjet(BaseEvenement):
 
 # --- Modèles Concrets ---
 
-# 1. Formation
 class Formation(BaseEvenement):
     titre = models.CharField(max_length=255, verbose_name="Titre (Formation/Diplôme)")
     institution = models.CharField(max_length=255, verbose_name="Institution (École, Organisme)")
@@ -130,12 +130,11 @@ class Formation(BaseEvenement):
     def __str__(self):
         return self.titre
 
-# 2. Activité Professionnelle
 class ActiviteProfessionnelle(BaseEvenement):
     poste = models.CharField(max_length=255, verbose_name="Poste (Titre du job)")
     missions = models.JSONField(
         default=list, blank=True, 
-        help_text="Liste d'objets: [{'sous_titre': '...', 'description': '...'}]"
+        help_text="Liste d'objets: [{'sous_titre': '...', 'descriptions': ['point 1', 'point 2']}]"
     )
     
     class Meta(BaseEvenement.Meta):
@@ -145,13 +144,12 @@ class ActiviteProfessionnelle(BaseEvenement):
     def __str__(self):
         return self.poste
 
-# 3. Service Civique
 class ServiceCivique(BaseEvenement):
     mission = models.CharField(max_length=255, verbose_name="Mission (Titre)")
     organisme_accueil = models.CharField(max_length=255)
     missions = models.JSONField(
         default=list, blank=True, 
-        help_text="Liste d'objets: [{'sous_titre': '...', 'description': '...'}]"
+        help_text="Liste d'objets: [{'sous_titre': '...', 'descriptions': ['point 1', 'point 2']}]"
     )
     
     class Meta(BaseEvenement.Meta):
@@ -161,7 +159,6 @@ class ServiceCivique(BaseEvenement):
     def __str__(self):
         return self.mission
 
-# 4. Projet Professionnel
 class ProjetProfessionnel(BaseProjet):
     class Meta(BaseProjet.Meta):
         verbose_name = "Projet Professionnel"
@@ -178,7 +175,6 @@ class MediaProjetProfessionnel(models.Model):
     def __str__(self):
         return f"Photo pour {self.projet.titre}"
 
-# 5. Projet Étudiant
 class ProjetEtudiant(BaseProjet):
     institution = models.CharField(max_length=255, verbose_name="Institution (Cadre scolaire)", blank=True)
     
@@ -197,7 +193,6 @@ class MediaProjetEtudiant(models.Model):
     def __str__(self):
         return f"Photo pour {self.projet.titre}"
 
-# 6. Projet Personnel
 class ProjetPersonnel(BaseProjet):
     class Meta(BaseProjet.Meta):
         verbose_name = "Projet Personnel"

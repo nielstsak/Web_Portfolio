@@ -1,34 +1,33 @@
 // frontend/src/components/chronologie/ModaleEvenement.jsx
 
-import { Box, Modal, Paper, Typography, IconButton, Divider, Chip, Link, List, ListItemText, Button } from '@mui/material';
+import { 
+  Box, Modal, Paper, Typography, IconButton, Divider, 
+  Chip, Link, List, ListItem, ListItemIcon, ListItemText, Button, Avatar
+} from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import CodeIcon from '@mui/icons-material/Code'; // Pour le lien vers le code
-import ArticleIcon from '@mui/icons-material/Article'; // Pour le justificatif
+import CodeIcon from '@mui/icons-material/Code'; 
+import ArticleIcon from '@mui/icons-material/Article';
+import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Style du conteneur de la modale
 const styleModale = {
   position: 'absolute',
   top: '50%',
   left: '50%',
   transform: 'translate(-50%, -50%)',
   width: { xs: '95%', md: '80%', lg: '60%' },
-  maxHeight: '90vh', // Hauteur maximale
+  maxHeight: '90vh', 
   display: 'flex',
   flexDirection: 'column',
-  overflow: 'hidden', // Géré par les sous-composants
+  overflow: 'hidden', 
 };
 
-// Animation "drop-in" pour la modale
 const variantsDropIn = {
   hidden: { y: "-5vh", opacity: 0 },
   visible: { y: "0", opacity: 1, transition: { duration: 0.2, type: "spring", stiffness: 300, damping: 25 } },
   exit: { y: "5vh", opacity: 0, transition: { duration: 0.2 } },
 };
 
-/**
- * Helper interne pour afficher les listes de missions/travaux
- */
 const AffichageMissions = ({ items, titre }) => {
   if (!items || items.length === 0) return null;
   
@@ -36,24 +35,26 @@ const AffichageMissions = ({ items, titre }) => {
     <Box sx={{ my: 2 }}>
       <Typography variant="h6" gutterBottom>{titre}</Typography>
       {items.map((item, idx) => (
-        <Box key={idx} sx={{ mb: 1.5 }}>
-          <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>{item.sous_titre}</Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
-            {item.description}
-          </Typography>
+        <Box key={idx} sx={{ mb: 2 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>{item.sous_titre}</Typography>
+          <List dense disablePadding>
+            {item.descriptions && item.descriptions.map((desc, descIdx) => (
+              <ListItem key={descIdx} sx={{ pl: 2, py: 0.5 }}>
+                <ListItemIcon sx={{ minWidth: '30px' }}>
+                  <FiberManualRecordIcon sx={{ fontSize: '0.6rem' }} />
+                </ListItemIcon>
+                <ListItemText primary={<Typography variant="body2" color="text.secondary">{desc}</Typography>} />
+              </ListItem>
+            ))}
+          </List>
         </Box>
       ))}
     </Box>
   );
 };
 
-/**
- * Helper interne pour afficher les données (précédemment 'specificites')
- * en fonction du type d'événement.
- */
 const AffichageSpecificites = ({ type, specificites }) => {
 
-  // Types "Projet" (Pro, Etudiant, Perso)
   if (type.startsWith('Projets')) {
     const { 
       institution, role, technologies, media_video, 
@@ -69,7 +70,25 @@ const AffichageSpecificites = ({ type, specificites }) => {
           <Box sx={{ my: 2 }}>
             <Typography variant="h6" gutterBottom>Technologies</Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-              {technologies.map(tech => <Chip key={tech} label={tech} size="small" />)}
+              {technologies.map(tech => (
+                <Chip 
+                  key={tech.id} 
+                  label={tech.nom} 
+                  avatar={
+                    <Avatar 
+                      src={tech.logo} 
+                      alt={tech.nom} 
+                      sx={{ 
+                        objectFit: 'contain', 
+                        backgroundColor: 'transparent', 
+                        p: 0.5 
+                      }} 
+                    />
+                  }
+                  variant="outlined"
+                  sx={{ p: 1 }}
+                />
+              ))}
             </Box>
           </Box>
         )}
@@ -77,7 +96,6 @@ const AffichageSpecificites = ({ type, specificites }) => {
         {(media_video || media_photos?.length > 0) && (
           <Box sx={{ my: 2 }}>
             <Typography variant="h6" gutterBottom>Média</Typography>
-            {/* Cas Vidéo */}
             {media_video && (
               <Box 
                 component="video" 
@@ -88,8 +106,6 @@ const AffichageSpecificites = ({ type, specificites }) => {
                 sx={{ width: '100%', borderRadius: 1, backgroundColor: '#000' }} 
               />
             )}
-            {/* Cas Photos (Affiche la première photo) */}
-            {/* TODO: Implémenter un carrousel si plusieurs photos */}
             {media_photos?.length > 0 && !media_video && (
                <Box 
                 component="img" 
@@ -101,7 +117,6 @@ const AffichageSpecificites = ({ type, specificites }) => {
           </Box>
         )}
 
-        {/* Sections "Travail Détaillé" */}
         <AffichageMissions items={travail_effectue} titre="Travail Détaillé" />
 
         {code_source_zip && (
@@ -120,7 +135,6 @@ const AffichageSpecificites = ({ type, specificites }) => {
     );
   }
 
-  // Autres types d'événements
   switch (type) {
     case 'Formation':
       return (
@@ -170,10 +184,6 @@ const AffichageSpecificites = ({ type, specificites }) => {
 };
 
 
-/**
- * Modale affichant les détails complets d'un EvenementChronologique.
- * @param {{ evenement: object, ouvert: boolean, onFermer: function }} props
- */
 function ModaleEvenement({ evenement, ouvert, onFermer }) {
   if (!evenement) return null;
 
@@ -183,7 +193,6 @@ function ModaleEvenement({ evenement, ouvert, onFermer }) {
       onClose={onFermer}
       closeAfterTransition
     >
-      {/* AnimatePresence est nécessaire pour l'animation de sortie */}
       <AnimatePresence>
         {ouvert && (
           <Paper 
@@ -195,7 +204,6 @@ function ModaleEvenement({ evenement, ouvert, onFermer }) {
             sx={styleModale} 
             elevation={10}
           >
-            {/* Entête fixe */}
             <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
               <Box>
                 <Typography variant="caption" color="text.secondary">{evenement.type}</Typography>
@@ -208,16 +216,13 @@ function ModaleEvenement({ evenement, ouvert, onFermer }) {
             
             <Divider />
 
-            {/* Contenu défilable */}
             <Box sx={{ p: 3, overflowY: 'auto' }}>
-              {/* Introduction (si elle existe) */}
               {evenement.description && (
                 <Typography variant="body1" sx={{ mb: 2, fontStyle: 'italic', whiteSpace: 'pre-wrap' }}>
                   {evenement.description}
                 </Typography>
               )}
               
-              {/* Détails spécifiques (normalisés) */}
               <AffichageSpecificites 
                 type={evenement.type} 
                 specificites={evenement.specificites} 
