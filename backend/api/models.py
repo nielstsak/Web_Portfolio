@@ -86,11 +86,17 @@ class BaseProjet(BaseEvenement):
         null=True, blank=True, 
         help_text="Vidéo unique de démonstration"
     )
-    code_source_zip = models.FileField(
-        upload_to='project_sources/', 
+    
+    # --- CORRECTION ---
+    # Remplacer FileField par CloudinaryField avec resource_type='raw'
+    code_source_zip = CloudinaryField(
+        resource_type='raw',
+        folder='project_sources',
         null=True, blank=True, 
         help_text="Archive ZIP du code source."
     )
+    # --- FIN CORRECTION ---
+
     class Meta(BaseEvenement.Meta):
         abstract = True
     def __str__(self):
