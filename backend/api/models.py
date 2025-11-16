@@ -2,7 +2,6 @@
 
 from django.db import models
 from django.core.validators import FileExtensionValidator
-from django.core.exceptions import ValidationError
 import sys
 from cloudinary.models import CloudinaryField
 
@@ -17,11 +16,9 @@ class CompetenceTechnologique(models.Model):
         blank=True,
         validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'webp', 'svg'])]
     )
-
     class Meta:
         verbose_name = "Compétence Technologique"
         verbose_name_plural = "Compétences Technologiques"
-
     def __str__(self):
         return self.nom
 
@@ -37,11 +34,9 @@ class Presentation(models.Model):
         blank=True,
         validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'webp'])]
     )
-
     class Meta:
         verbose_name = "Texte de Présentation"
         verbose_name_plural = "Texte de Présentation"
-
     def __str__(self):
         return "Texte de présentation du projet professionnel"
 
@@ -68,12 +63,9 @@ class Diplome(models.Model):
 
 # --- NOUVEAUX MODÈLES (CHRONOLOGIE) ---
 
-# --- Classes de Base Abstraites ---
-
 class BaseEvenement(models.Model):
     date_debut = models.DateField()
     date_fin = models.DateField(null=True, blank=True, help_text="Laisser vide si en cours ou ponctuel.")
-
     class Meta:
         abstract = True
         ordering = ['-date_debut']
@@ -99,18 +91,12 @@ class BaseProjet(BaseEvenement):
         null=True, blank=True, 
         help_text="Archive ZIP du code source."
     )
-    travail_effectue = models.JSONField(
-        default=list, blank=True, 
-        help_text="Liste d'objets: [{'sous_titre': '...', 'descriptions': ['point 1', 'point 2']}]"
-    )
+    # travail_effectue (JSONField) est supprimé d'ici
 
     class Meta(BaseEvenement.Meta):
         abstract = True
-
     def __str__(self):
         return self.titre
-
-# --- Modèles Concrets ---
 
 class Formation(BaseEvenement):
     titre = models.CharField(max_length=255, verbose_name="Titre (Formation/Diplôme)")
@@ -122,40 +108,28 @@ class Formation(BaseEvenement):
         null=True, blank=True,
         help_text="Upload PDF/Image"
     )
-    
     class Meta(BaseEvenement.Meta):
         verbose_name = "Formation / Diplôme"
         verbose_name_plural = "Formations / Diplômes"
-        
     def __str__(self):
         return self.titre
 
 class ActiviteProfessionnelle(BaseEvenement):
     poste = models.CharField(max_length=255, verbose_name="Poste (Titre du job)")
-    missions = models.JSONField(
-        default=list, blank=True, 
-        help_text="Liste d'objets: [{'sous_titre': '...', 'descriptions': ['point 1', 'point 2']}]"
-    )
-    
+    # missions (JSONField) est supprimé d'ici
     class Meta(BaseEvenement.Meta):
         verbose_name = "Activité Professionnelle"
         verbose_name_plural = "Activités Professionnelles"
-        
     def __str__(self):
         return self.poste
 
 class ServiceCivique(BaseEvenement):
     mission = models.CharField(max_length=255, verbose_name="Mission (Titre)")
     organisme_accueil = models.CharField(max_length=255)
-    missions = models.JSONField(
-        default=list, blank=True, 
-        help_text="Liste d'objets: [{'sous_titre': '...', 'descriptions': ['point 1', 'point 2']}]"
-    )
-    
+    # missions (JSONField) est supprimé d'ici
     class Meta(BaseEvenement.Meta):
         verbose_name = "Service Civique"
         verbose_name_plural = "Services Civiques"
-        
     def __str__(self):
         return self.mission
 
@@ -168,16 +142,13 @@ class MediaProjetProfessionnel(models.Model):
     projet = models.ForeignKey(ProjetProfessionnel, related_name='media_photos', on_delete=models.CASCADE)
     image = CloudinaryField(resource_type='image', folder='projets_photos_pro')
     legende = models.CharField(max_length=255, blank=True)
-    
     class Meta:
         verbose_name = "Média (Photo Projet Pro)"
-        
     def __str__(self):
         return f"Photo pour {self.projet.titre}"
 
 class ProjetEtudiant(BaseProjet):
     institution = models.CharField(max_length=255, verbose_name="Institution (Cadre scolaire)", blank=True)
-    
     class Meta(BaseProjet.Meta):
         verbose_name = "Projet Étudiant"
         verbose_name_plural = "Projets Étudiants"
@@ -186,10 +157,8 @@ class MediaProjetEtudiant(models.Model):
     projet = models.ForeignKey(ProjetEtudiant, related_name='media_photos', on_delete=models.CASCADE)
     image = CloudinaryField(resource_type='image', folder='projets_photos_etudiant')
     legende = models.CharField(max_length=255, blank=True)
-    
     class Meta:
         verbose_name = "Média (Photo Projet Étudiant)"
-        
     def __str__(self):
         return f"Photo pour {self.projet.titre}"
 
@@ -202,9 +171,55 @@ class MediaProjetPersonnel(models.Model):
     projet = models.ForeignKey(ProjetPersonnel, related_name='media_photos', on_delete=models.CASCADE)
     image = CloudinaryField(resource_type='image', folder='projets_photos_perso')
     legende = models.CharField(max_length=255, blank=True)
-    
     class Meta:
         verbose_name = "Média (Photo Projet Perso)"
-        
     def __str__(self):
         return f"Photo pour {self.projet.titre}"
+
+
+# --- NOUVEAUX MODÈLES RELATIONNELS (Pour l'Admin) ---
+
+class MissionActivitePro(models.Model):
+    activite = models.ForeignKey(ActiviteProfessionnelle, related_name='missions', on_delete=models.CASCADE)
+    sous_titre = models.CharField(max_length=255)
+    descriptions = models.JSONField(default=list, help_text="Liste de points clés, ex: [\"point 1\", \"point 2\"]")
+    class Meta:
+        verbose_name = "Mission (Activité Pro)"
+    def __str__(self):
+        return self.sous_titre
+
+class MissionServiceCivique(models.Model):
+    service = models.ForeignKey(ServiceCivique, related_name='missions', on_delete=models.CASCADE)
+    sous_titre = models.CharField(max_length=255)
+    descriptions = models.JSONField(default=list, help_text="Liste de points clés, ex: [\"point 1\", \"point 2\"]")
+    class Meta:
+        verbose_name = "Mission (Service Civique)"
+    def __str__(self):
+        return self.sous_titre
+
+class TravailEffectueProjetPro(models.Model):
+    projet = models.ForeignKey(ProjetProfessionnel, related_name='travail_effectue', on_delete=models.CASCADE)
+    sous_titre = models.CharField(max_length=255)
+    descriptions = models.JSONField(default=list, help_text="Liste de points clés, ex: [\"point 1\", \"point 2\"]")
+    class Meta:
+        verbose_name = "Travail Effectué (Projet Pro)"
+    def __str__(self):
+        return self.sous_titre
+
+class TravailEffectueProjetEtu(models.Model):
+    projet = models.ForeignKey(ProjetEtudiant, related_name='travail_effectue', on_delete=models.CASCADE)
+    sous_titre = models.CharField(max_length=255)
+    descriptions = models.JSONField(default=list, help_text="Liste de points clés, ex: [\"point 1\", \"point 2\"]")
+    class Meta:
+        verbose_name = "Travail Effectué (Projet Étudiant)"
+    def __str__(self):
+        return self.sous_titre
+
+class TravailEffectueProjetPerso(models.Model):
+    projet = models.ForeignKey(ProjetPersonnel, related_name='travail_effectue', on_delete=models.CASCADE)
+    sous_titre = models.CharField(max_length=255)
+    descriptions = models.JSONField(default=list, help_text="Liste de points clés, ex: [\"point 1\", \"point 2\"]")
+    class Meta:
+        verbose_name = "Travail Effectué (Projet Perso)"
+    def __str__(self):
+        return self.sous_titre

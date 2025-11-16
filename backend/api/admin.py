@@ -4,19 +4,16 @@ from django.contrib import admin
 from django.utils.html import mark_safe
 import sys
 from .models import (
-    # Modèles conservés
     Presentation,
     PosteCible,
     Diplome,
     CompetenceTechnologique,
-    
-    # Nouveaux modèles de chronologie
     Formation, 
-    ActiviteProfessionnelle, 
-    ServiceCivique,
-    ProjetProfessionnel, MediaProjetProfessionnel,
-    ProjetEtudiant, MediaProjetEtudiant,
-    ProjetPersonnel, MediaProjetPersonnel,
+    ActiviteProfessionnelle, MissionActivitePro,
+    ServiceCivique, MissionServiceCivique,
+    ProjetProfessionnel, MediaProjetProfessionnel, TravailEffectueProjetPro,
+    ProjetEtudiant, MediaProjetEtudiant, TravailEffectueProjetEtu,
+    ProjetPersonnel, MediaProjetPersonnel, TravailEffectueProjetPerso,
 )
 from django.contrib import messages
 
@@ -25,7 +22,6 @@ from django.contrib import messages
 @admin.register(CompetenceTechnologique)
 class CompetenceTechnologiqueAdmin(admin.ModelAdmin):
     list_display = ('nom', 'afficher_apercu_logo')
-    
     def afficher_apercu_logo(self, competence):
         if competence.logo:
             return mark_safe(f'<img src="{competence.logo.url}" alt="{competence.nom}" height="40" >')
@@ -34,18 +30,11 @@ class CompetenceTechnologiqueAdmin(admin.ModelAdmin):
 
 @admin.register(Presentation)
 class PresentationAdmin(admin.ModelAdmin):
-    def save_model(self, request, obj, form, change):
-        print(f"[ADMIN] Tentative de sauvegarde présentation", file=sys.stdout)
-        if 'photo' in request.FILES:
-            print(f"[ADMIN] Photo reçue: {request.FILES['photo'].name}", file=sys.stdout)
-        super().save_model(request, obj, form, change)
-        if obj.photo:
-             print(f"[ADMIN] URL Photo après sauvegarde: {getattr(obj.photo, 'url', 'Pas dURL')}", file=sys.stdout)
+    pass
 
 @admin.register(Diplome)
 class DiplomeAdmin(admin.ModelAdmin):
     list_display = ('titre', 'institution', 'afficher_parchemin')
-    
     def afficher_parchemin(self, diplome):
         if diplome.parchemin:
             return mark_safe(f'<a href="{diplome.parchemin.url}" target="_blank">Voir justificatif</a>')
@@ -57,6 +46,38 @@ class PosteCibleAdmin(admin.ModelAdmin):
     pass
 
 # --- NOUVEAUX MODÈLES (CHRONOLOGIE) ---
+
+# --- Inlines pour les Missions / Travaux ---
+class MissionActiviteProInline(admin.TabularInline):
+    model = MissionActivitePro
+    extra = 1
+    verbose_name = "Mission détaillée"
+    verbose_name_plural = "Missions détaillées"
+
+class MissionServiceCiviqueInline(admin.TabularInline):
+    model = MissionServiceCivique
+    extra = 1
+    verbose_name = "Mission détaillée"
+    verbose_name_plural = "Missions détaillées"
+
+class TravailEffectueProjetProInline(admin.TabularInline):
+    model = TravailEffectueProjetPro
+    extra = 1
+    verbose_name = "Section de travail effectué"
+    verbose_name_plural = "Travail Détaillé"
+
+class TravailEffectueProjetEtuInline(admin.TabularInline):
+    model = TravailEffectueProjetEtu
+    extra = 1
+    verbose_name = "Section de travail effectué"
+    verbose_name_plural = "Travail Détaillé"
+
+class TravailEffectueProjetPersoInline(admin.TabularInline):
+    model = TravailEffectueProjetPerso
+    extra = 1
+    verbose_name = "Section de travail effectué"
+    verbose_name_plural = "Travail Détaillé"
+
 
 # --- Inlines pour les Médias de Projet ---
 class MediaProjetProfessionnelInline(admin.TabularInline):
@@ -80,8 +101,9 @@ class MediaProjetPersonnelInline(admin.TabularInline):
 # --- Admins pour les Projets ---
 class BaseProjetAdmin(admin.ModelAdmin):
     list_display = ('titre', 'date_debut', 'date_fin', 'role')
-    search_fields = ('titre', 'introduction', 'role', 'technologies', 'travail_effectue')
+    search_fields = ('titre', 'introduction', 'role')
     list_filter = ('date_debut',)
+    filter_horizontal = ('technologies',)
     fieldsets = (
         ('Informations Générales', {
             'fields': ('titre', 'introduction', 'role', ('date_debut', 'date_fin'))
@@ -89,19 +111,15 @@ class BaseProjetAdmin(admin.ModelAdmin):
         ('Détails Techniques', {
             'fields': ('technologies', 'media_video', 'code_source_zip')
         }),
-        ('Travail Détaillé', {
-            'fields': ('travail_effectue',)
-        }),
     )
 
 @admin.register(ProjetProfessionnel)
 class ProjetProfessionnelAdmin(BaseProjetAdmin):
-    inlines = [MediaProjetProfessionnelInline]
+    inlines = [MediaProjetProfessionnelInline, TravailEffectueProjetProInline]
 
 @admin.register(ProjetEtudiant)
 class ProjetEtudiantAdmin(BaseProjetAdmin):
-    inlines = [MediaProjetEtudiantInline]
-    # Ajoute 'institution' aux fieldsets
+    inlines = [MediaProjetEtudiantInline, TravailEffectueProjetEtuInline]
     fieldsets = (
         ('Informations Générales', {
             'fields': ('titre', 'institution', 'introduction', 'role', ('date_debut', 'date_fin'))
@@ -109,15 +127,12 @@ class ProjetEtudiantAdmin(BaseProjetAdmin):
         ('Détails Techniques', {
             'fields': ('technologies', 'media_video', 'code_source_zip')
         }),
-        ('Travail Détaillé', {
-            'fields': ('travail_effectue',)
-        }),
     )
     list_display = ('titre', 'date_debut', 'institution', 'role')
 
 @admin.register(ProjetPersonnel)
 class ProjetPersonnelAdmin(BaseProjetAdmin):
-    inlines = [MediaProjetPersonnelInline]
+    inlines = [MediaProjetPersonnelInline, TravailEffectueProjetPersoInline]
 
 # --- Admins pour les autres Événements ---
 
@@ -129,12 +144,14 @@ class FormationAdmin(admin.ModelAdmin):
 @admin.register(ActiviteProfessionnelle)
 class ActiviteProfessionnelleAdmin(admin.ModelAdmin):
     list_display = ('poste', 'date_debut', 'date_fin')
-    search_fields = ('poste', 'missions')
+    search_fields = ('poste',)
+    inlines = [MissionActiviteProInline]
 
 @admin.register(ServiceCivique)
 class ServiceCiviqueAdmin(admin.ModelAdmin):
     list_display = ('mission', 'organisme_accueil', 'date_debut', 'date_fin')
-    search_fields = ('mission', 'organisme_accueil', 'missions')
+    search_fields = ('mission', 'organisme_accueil',)
+    inlines = [MissionServiceCiviqueInline]
 
 # Enregistrement des modèles de média (pour gestion manuelle si nécessaire)
 admin.site.register(MediaProjetProfessionnel)
