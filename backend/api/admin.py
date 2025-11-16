@@ -3,6 +3,10 @@
 from django.contrib import admin
 from django.utils.html import mark_safe
 import sys
+# Ajouts pour personnaliser le widget TextField
+from django.db import models
+from django.forms import Textarea
+
 from .models import (
     Presentation,
     PosteCible,
@@ -15,7 +19,6 @@ from .models import (
     ProjetEtudiant, MediaProjetEtudiant, TravailEffectueProjetEtu,
     ProjetPersonnel, MediaProjetPersonnel, TravailEffectueProjetPerso,
 )
-from django.contrib import messages
 
 # --- MODÈLES CONSERVÉS ---
 
@@ -47,34 +50,38 @@ class PosteCibleAdmin(admin.ModelAdmin):
 
 # --- NOUVEAUX MODÈLES (CHRONOLOGIE) ---
 
+# Classe de base pour les Inlines de Missions/Travaux
+class BaseListInlineAdmin(admin.TabularInline):
+    """Classe de base pour styliser le champ 'descriptions' TextField."""
+    extra = 1
+    # Personnalise le widget TextField pour qu'il soit plus petit
+    formfield_overrides = {
+        models.TextField: {'widget': Textarea(attrs={'rows': 5, 'cols': 60})},
+    }
+
 # --- Inlines pour les Missions / Travaux ---
-class MissionActiviteProInline(admin.TabularInline):
+class MissionActiviteProInline(BaseListInlineAdmin):
     model = MissionActivitePro
-    extra = 1
     verbose_name = "Mission détaillée"
     verbose_name_plural = "Missions détaillées"
 
-class MissionServiceCiviqueInline(admin.TabularInline):
+class MissionServiceCiviqueInline(BaseListInlineAdmin):
     model = MissionServiceCivique
-    extra = 1
     verbose_name = "Mission détaillée"
     verbose_name_plural = "Missions détaillées"
 
-class TravailEffectueProjetProInline(admin.TabularInline):
+class TravailEffectueProjetProInline(BaseListInlineAdmin):
     model = TravailEffectueProjetPro
-    extra = 1
     verbose_name = "Section de travail effectué"
     verbose_name_plural = "Travail Détaillé"
 
-class TravailEffectueProjetEtuInline(admin.TabularInline):
+class TravailEffectueProjetEtuInline(BaseListInlineAdmin):
     model = TravailEffectueProjetEtu
-    extra = 1
     verbose_name = "Section de travail effectué"
     verbose_name_plural = "Travail Détaillé"
 
-class TravailEffectueProjetPersoInline(admin.TabularInline):
+class TravailEffectueProjetPersoInline(BaseListInlineAdmin):
     model = TravailEffectueProjetPerso
-    extra = 1
     verbose_name = "Section de travail effectué"
     verbose_name_plural = "Travail Détaillé"
 
@@ -153,7 +160,6 @@ class ServiceCiviqueAdmin(admin.ModelAdmin):
     search_fields = ('mission', 'organisme_accueil',)
     inlines = [MissionServiceCiviqueInline]
 
-# Enregistrement des modèles de média (pour gestion manuelle si nécessaire)
 admin.site.register(MediaProjetProfessionnel)
 admin.site.register(MediaProjetEtudiant)
 admin.site.register(MediaProjetPersonnel)

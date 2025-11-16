@@ -91,8 +91,6 @@ class BaseProjet(BaseEvenement):
         null=True, blank=True, 
         help_text="Archive ZIP du code source."
     )
-    # travail_effectue (JSONField) est supprimé d'ici
-
     class Meta(BaseEvenement.Meta):
         abstract = True
     def __str__(self):
@@ -116,7 +114,6 @@ class Formation(BaseEvenement):
 
 class ActiviteProfessionnelle(BaseEvenement):
     poste = models.CharField(max_length=255, verbose_name="Poste (Titre du job)")
-    # missions (JSONField) est supprimé d'ici
     class Meta(BaseEvenement.Meta):
         verbose_name = "Activité Professionnelle"
         verbose_name_plural = "Activités Professionnelles"
@@ -126,7 +123,6 @@ class ActiviteProfessionnelle(BaseEvenement):
 class ServiceCivique(BaseEvenement):
     mission = models.CharField(max_length=255, verbose_name="Mission (Titre)")
     organisme_accueil = models.CharField(max_length=255)
-    # missions (JSONField) est supprimé d'ici
     class Meta(BaseEvenement.Meta):
         verbose_name = "Service Civique"
         verbose_name_plural = "Services Civiques"
@@ -176,13 +172,12 @@ class MediaProjetPersonnel(models.Model):
     def __str__(self):
         return f"Photo pour {self.projet.titre}"
 
-
-# --- NOUVEAUX MODÈLES RELATIONNELS (Pour l'Admin) ---
+# --- MODÈLES RELATIONNELS (POUR L'ADMIN INTUITIF) ---
 
 class MissionActivitePro(models.Model):
     activite = models.ForeignKey(ActiviteProfessionnelle, related_name='missions', on_delete=models.CASCADE)
     sous_titre = models.CharField(max_length=255)
-    descriptions = models.JSONField(default=list, help_text="Liste de points clés, ex: [\"point 1\", \"point 2\"]")
+    descriptions = models.TextField(blank=True, help_text="Un point par ligne. Chaque ligne deviendra une puce.")
     class Meta:
         verbose_name = "Mission (Activité Pro)"
     def __str__(self):
@@ -191,7 +186,7 @@ class MissionActivitePro(models.Model):
 class MissionServiceCivique(models.Model):
     service = models.ForeignKey(ServiceCivique, related_name='missions', on_delete=models.CASCADE)
     sous_titre = models.CharField(max_length=255)
-    descriptions = models.JSONField(default=list, help_text="Liste de points clés, ex: [\"point 1\", \"point 2\"]")
+    descriptions = models.TextField(blank=True, help_text="Un point par ligne. Chaque ligne deviendra une puce.")
     class Meta:
         verbose_name = "Mission (Service Civique)"
     def __str__(self):
@@ -200,7 +195,7 @@ class MissionServiceCivique(models.Model):
 class TravailEffectueProjetPro(models.Model):
     projet = models.ForeignKey(ProjetProfessionnel, related_name='travail_effectue', on_delete=models.CASCADE)
     sous_titre = models.CharField(max_length=255)
-    descriptions = models.JSONField(default=list, help_text="Liste de points clés, ex: [\"point 1\", \"point 2\"]")
+    descriptions = models.TextField(blank=True, help_text="Un point par ligne. Chaque ligne deviendra une puce.")
     class Meta:
         verbose_name = "Travail Effectué (Projet Pro)"
     def __str__(self):
@@ -209,7 +204,7 @@ class TravailEffectueProjetPro(models.Model):
 class TravailEffectueProjetEtu(models.Model):
     projet = models.ForeignKey(ProjetEtudiant, related_name='travail_effectue', on_delete=models.CASCADE)
     sous_titre = models.CharField(max_length=255)
-    descriptions = models.JSONField(default=list, help_text="Liste de points clés, ex: [\"point 1\", \"point 2\"]")
+    descriptions = models.TextField(blank=True, help_text="Un point par ligne. Chaque ligne deviendra une puce.")
     class Meta:
         verbose_name = "Travail Effectué (Projet Étudiant)"
     def __str__(self):
@@ -218,7 +213,7 @@ class TravailEffectueProjetEtu(models.Model):
 class TravailEffectueProjetPerso(models.Model):
     projet = models.ForeignKey(ProjetPersonnel, related_name='travail_effectue', on_delete=models.CASCADE)
     sous_titre = models.CharField(max_length=255)
-    descriptions = models.JSONField(default=list, help_text="Liste de points clés, ex: [\"point 1\", \"point 2\"]")
+    descriptions = models.TextField(blank=True, help_text="Un point par ligne. Chaque ligne deviendra une puce.")
     class Meta:
         verbose_name = "Travail Effectué (Projet Perso)"
     def __str__(self):

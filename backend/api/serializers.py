@@ -1,78 +1,109 @@
 # backend/api/serializers.py
 from rest_framework import serializers
 from .models import (
-    # CONSERVÉS
     Presentation,
     PosteCible,
     Diplome,
     CompetenceTechnologique,
-
-    # NOUVEAUX MODÈLES
     Formation, 
-    ActiviteProfessionnelle, 
-    ServiceCivique,
-    ProjetProfessionnel, MediaProjetProfessionnel,
-    ProjetEtudiant, MediaProjetEtudiant,
-    ProjetPersonnel, MediaProjetPersonnel,
+    ActiviteProfessionnelle, MissionActivitePro,
+    ServiceCivique, MissionServiceCivique,
+    ProjetProfessionnel, MediaProjetProfessionnel, TravailEffectueProjetPro,
+    ProjetEtudiant, MediaProjetEtudiant, TravailEffectueProjetEtu,
+    ProjetPersonnel, MediaProjetPersonnel, TravailEffectueProjetPerso,
 )
 
 # --- SÉRIALISEURS CONSERVÉS (INTRODUCTION) ---
 
 class CompetenceTechnologiqueSerializer(serializers.ModelSerializer):
-    """Sérialiseur pour le modèle CompetenceTechnologique."""
     logo = serializers.FileField(use_url=True)
-
     class Meta:
         model = CompetenceTechnologique
         fields = ['id', 'nom', 'logo']
 
 class PresentationSerializer(serializers.ModelSerializer):
-    """Sérialiseur pour le modèle Presentation."""
     photo = serializers.FileField(use_url=True)
-
     class Meta:
         model = Presentation
         fields = '__all__'
 
 class PosteCibleSerializer(serializers.ModelSerializer):
-    """Sérialiseur pour le modèle PosteCible."""
     class Meta:
         model = PosteCible
         fields = '__all__'
 
 class DiplomeSerializer(serializers.ModelSerializer):
-    """Sérialiseur pour le modèle Diplome (Introduction)."""
     parchemin = serializers.FileField(use_url=True, required=False)
-
     class Meta:
         model = Diplome
         fields = ['id', 'titre', 'institution', 'parchemin']
 
 
-# --- NOUVEAUX SÉRIALISEURS (CHRONOLOGIE) ---
+# --- SÉRIALISEUR DE BASE POUR TRANSFORMER LE TEXTE EN LISTE ---
 
-# 1. Formation
+class BaseListSerializer(serializers.ModelSerializer):
+    """
+    Transforme le champ 'descriptions' (TextField) en une liste de strings.
+    """
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        text_data = ret.get('descriptions', '')
+        # Sépare par ligne, supprime les espaces et filtre les lignes vides
+        list_data = [line.strip() for line in text_data.splitlines() if line.strip()]
+        ret['descriptions'] = list_data
+        return ret
+
+# --- NOUVEAUX SÉRIALISEURS (POUR INLINES) ---
+
+class MissionActiviteProSerializer(BaseListSerializer):
+    class Meta:
+        model = MissionActivitePro
+        fields = ['id', 'sous_titre', 'descriptions']
+
+class MissionServiceCiviqueSerializer(BaseListSerializer):
+    class Meta:
+        model = MissionServiceCivique
+        fields = ['id', 'sous_titre', 'descriptions']
+
+class TravailEffectueProjetProSerializer(BaseListSerializer):
+    class Meta:
+        model = TravailEffectueProjetPro
+        fields = ['id', 'sous_titre', 'descriptions']
+
+class TravailEffectueProjetEtuSerializer(BaseListSerializer):
+    class Meta:
+        model = TravailEffectueProjetEtu
+        fields = ['id', 'sous_titre', 'descriptions']
+
+class TravailEffectueProjetPersoSerializer(BaseListSerializer):
+    class Meta:
+        model = TravailEffectueProjetPerso
+        fields = ['id', 'sous_titre', 'descriptions']
+
+
+# --- SÉRIALISEURS PRINCIPAUX (CHRONOLOGIE) ---
+
 class FormationSerializer(serializers.ModelSerializer):
     justificatif = serializers.FileField(use_url=True, required=False)
     class Meta:
         model = Formation
         fields = '__all__'
 
-# 2. Activité Professionnelle
 class ActiviteProfessionnelleSerializer(serializers.ModelSerializer):
+    missions = MissionActiviteProSerializer(many=True, read_only=True)
     class Meta:
         model = ActiviteProfessionnelle
         fields = '__all__'
 
-# 3. Service Civique
 class ServiceCiviqueSerializer(serializers.ModelSerializer):
+    missions = MissionServiceCiviqueSerializer(many=True, read_only=True)
     class Meta:
         model = ServiceCivique
         fields = '__all__'
 
+
 # --- Sérialiseurs de Projets (avec médias imbriqués) ---
 
-# 4. Projet Professionnel
 class MediaProjetProfessionnelSerializer(serializers.ModelSerializer):
     image = serializers.FileField(use_url=True)
     class Meta:
@@ -83,12 +114,13 @@ class ProjetProfessionnelSerializer(serializers.ModelSerializer):
     media_photos = MediaProjetProfessionnelSerializer(many=True, read_only=True)
     media_video = serializers.FileField(use_url=True, required=False)
     code_source_zip = serializers.FileField(use_url=True, required=False)
+    technologies = CompetenceTechnologiqueSerializer(many=True, read_only=True)
+    travail_effectue = TravailEffectueProjetProSerializer(many=True, read_only=True)
 
     class Meta:
         model = ProjetProfessionnel
         fields = '__all__'
 
-# 5. Projet Étudiant
 class MediaProjetEtudiantSerializer(serializers.ModelSerializer):
     image = serializers.FileField(use_url=True)
     class Meta:
@@ -99,12 +131,13 @@ class ProjetEtudiantSerializer(serializers.ModelSerializer):
     media_photos = MediaProjetEtudiantSerializer(many=True, read_only=True)
     media_video = serializers.FileField(use_url=True, required=False)
     code_source_zip = serializers.FileField(use_url=True, required=False)
+    technologies = CompetenceTechnologiqueSerializer(many=True, read_only=True)
+    travail_effectue = TravailEffectueProjetEtuSerializer(many=True, read_only=True)
 
     class Meta:
         model = ProjetEtudiant
         fields = '__all__'
 
-# 6. Projet Personnel
 class MediaProjetPersonnelSerializer(serializers.ModelSerializer):
     image = serializers.FileField(use_url=True)
     class Meta:
@@ -115,6 +148,8 @@ class ProjetPersonnelSerializer(serializers.ModelSerializer):
     media_photos = MediaProjetPersonnelSerializer(many=True, read_only=True)
     media_video = serializers.FileField(use_url=True, required=False)
     code_source_zip = serializers.FileField(use_url=True, required=False)
+    technologies = CompetenceTechnologiqueSerializer(many=True, read_only=True)
+    travail_effectue = TravailEffectueProjetPersoSerializer(many=True, read_only=True)
 
     class Meta:
         model = ProjetPersonnel
