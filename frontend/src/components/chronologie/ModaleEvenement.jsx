@@ -10,11 +10,7 @@ import ArticleIcon from '@mui/icons-material/Article';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const styleModale = {
-  position: 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
+const styleContenuModale = {
   width: { xs: '95%', md: '80%', lg: '60%' },
   maxHeight: '90vh', 
   display: 'flex',
@@ -58,7 +54,7 @@ const AffichageSpecificites = ({ type, specificites }) => {
   if (type.startsWith('Projets')) {
     const { 
       institution, role, technologies, media_video, 
-      media_photos, url_code_source, travail_effectue // <-- MODIFIÉ
+      media_photos, url_code_source, travail_effectue
     } = specificites;
     
     return (
@@ -119,7 +115,6 @@ const AffichageSpecificites = ({ type, specificites }) => {
 
         <AffichageMissions items={travail_effectue} titre="Travail Détaillé" />
 
-        {/* --- MODIFICATION --- */}
         {url_code_source && (
           <Button 
             variant="outlined" 
@@ -132,7 +127,6 @@ const AffichageSpecificites = ({ type, specificites }) => {
             Voir le code source
           </Button>
         )}
-        {/* --- FIN MODIFICATION --- */}
       </Box>
     );
   }
@@ -200,6 +194,11 @@ function ModaleEvenement({ evenement, ouvert, onFermer }) {
           backgroundColor: 'rgba(0,0,0,0.5)'
         }
       }}
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
     >
       <AnimatePresence>
         {ouvert && (
@@ -209,7 +208,7 @@ function ModaleEvenement({ evenement, ouvert, onFermer }) {
             initial="hidden"
             animate="visible"
             exit="exit"
-            sx={styleModale} 
+            sx={styleContenuModale} 
             elevation={10}
           >
             <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
