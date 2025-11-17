@@ -112,11 +112,36 @@ class BaseProjetAdmin(admin.ModelAdmin):
             'fields': ('titre', 'introduction', 'role', ('date_debut', 'date_fin'))
         }),
         ('Détails Techniques', {
-            # --- MODIFICATION ---
-            'fields': ('technologies', 'media_video', 'url_code_source')
-            # --- FIN MODIFICATION ---
+            'fields': ('technologies', 'media_video', 'code_source_zip')
         }),
     )
+
+    # --- LOGGING DÉTAILLÉ ---
+    def save_model(self, request, obj, form, change):
+        print("--- LOGGING ADMIN SAVE_MODEL ---", file=sys.stdout)
+        try:
+            if 'media_video' in request.FILES:
+                print(f"[ADMIN] Fichier 'media_video' détecté: {request.FILES['media_video'].name}", file=sys.stdout)
+            
+            if 'code_source_zip' in request.FILES:
+                print(f"[ADMIN] Fichier 'code_source_zip' détecté: {request.FILES['code_source_zip'].name}", file=sys.stdout)
+
+            print("[ADMIN] Tentative de super().save_model()", file=sys.stdout)
+            super().save_model(request, obj, form, change)
+            print("[ADMIN] super().save_model() RÉUSSI", file=sys.stdout)
+
+            if obj.media_video:
+                print(f"[ADMIN] Retour Cloudinary 'media_video' URL: {getattr(obj.media_video, 'url', 'Pas dURL')}", file=sys.stdout)
+            if obj.code_source_zip:
+                print(f"[ADMIN] Retour Cloudinary 'code_source_zip' URL: {getattr(obj.code_source_zip, 'url', 'Pas dURL')}", file=sys.stdout)
+
+        except Exception as e:
+            print(f"[ADMIN] ERREUR CRITIQUE PENDANT save_model: {type(e).__name__} - {e}", file=sys.stdout)
+            raise
+        finally:
+            print("--- FIN LOGGING ADMIN SAVE_MODEL ---", file=sys.stdout)
+    # --- FIN LOGGING ---
+
 
 @admin.register(ProjetProfessionnel)
 class ProjetProfessionnelAdmin(BaseProjetAdmin):
@@ -130,9 +155,7 @@ class ProjetEtudiantAdmin(BaseProjetAdmin):
             'fields': ('titre', 'institution', 'introduction', 'role', ('date_debut', 'date_fin'))
         }),
         ('Détails Techniques', {
-            # --- MODIFICATION ---
-            'fields': ('technologies', 'media_video', 'url_code_source')
-            # --- FIN MODIFICATION ---
+            'fields': ('technologies', 'media_video', 'code_source_zip')
         }),
     )
     list_display = ('titre', 'date_debut', 'institution', 'role')
