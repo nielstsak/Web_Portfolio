@@ -29,16 +29,13 @@ const normaliserProjet = (projet, type) => ({
     media_video: projet.media_video,
     media_photos: projet.media_photos,
     // --- MODIFICATION ---
-    url_code_source: projet.url_code_source, // Remplacement de code_source_zip
+    url_code_source: projet.url_code_source, // Remplacement
     // --- FIN MODIFICATION ---
     travail_effectue: projet.travail_effectue,
     institution: projet.institution || null,
   }
 });
 
-/**
- * Extrait une description d'aperçu de la nouvelle structure de missions/travaux.
- */
 const getApercuDescription = (missions) => {
   try {
     if (missions && missions.length > 0 && 

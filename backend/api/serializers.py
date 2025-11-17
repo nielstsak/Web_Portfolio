@@ -47,9 +47,13 @@ class BaseListSerializer(serializers.ModelSerializer):
     """
     def to_representation(self, instance):
         ret = super().to_representation(instance)
-        text_data = ret.get('descriptions', '')
-        # Sépare par ligne, supprime les espaces et filtre les lignes vides
-        list_data = [line.strip() for line in text_data.splitlines() if line.strip()]
+        text_data = ret.get('descriptions')
+        
+        if not text_data:
+            list_data = []
+        else:
+            list_data = [line.strip() for line in text_data.splitlines() if line.strip()]
+            
         ret['descriptions'] = list_data
         return ret
 
@@ -113,9 +117,9 @@ class MediaProjetProfessionnelSerializer(serializers.ModelSerializer):
 class ProjetProfessionnelSerializer(serializers.ModelSerializer):
     media_photos = MediaProjetProfessionnelSerializer(many=True, read_only=True)
     media_video = serializers.FileField(use_url=True, required=False)
-    code_source_zip = serializers.FileField(use_url=True, required=False)
     technologies = CompetenceTechnologiqueSerializer(many=True, read_only=True)
     travail_effectue = TravailEffectueProjetProSerializer(many=True, read_only=True)
+    # url_code_source est déjà inclus par fields = '__all__'
 
     class Meta:
         model = ProjetProfessionnel
@@ -130,9 +134,9 @@ class MediaProjetEtudiantSerializer(serializers.ModelSerializer):
 class ProjetEtudiantSerializer(serializers.ModelSerializer):
     media_photos = MediaProjetEtudiantSerializer(many=True, read_only=True)
     media_video = serializers.FileField(use_url=True, required=False)
-    code_source_zip = serializers.FileField(use_url=True, required=False)
     technologies = CompetenceTechnologiqueSerializer(many=True, read_only=True)
     travail_effectue = TravailEffectueProjetEtuSerializer(many=True, read_only=True)
+    # url_code_source est déjà inclus par fields = '__all__'
 
     class Meta:
         model = ProjetEtudiant
@@ -147,9 +151,9 @@ class MediaProjetPersonnelSerializer(serializers.ModelSerializer):
 class ProjetPersonnelSerializer(serializers.ModelSerializer):
     media_photos = MediaProjetPersonnelSerializer(many=True, read_only=True)
     media_video = serializers.FileField(use_url=True, required=False)
-    code_source_zip = serializers.FileField(use_url=True, required=False)
     technologies = CompetenceTechnologiqueSerializer(many=True, read_only=True)
     travail_effectue = TravailEffectueProjetPersoSerializer(many=True, read_only=True)
+    # url_code_source est déjà inclus par fields = '__all__'
 
     class Meta:
         model = ProjetPersonnel

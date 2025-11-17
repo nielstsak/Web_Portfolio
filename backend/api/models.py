@@ -87,13 +87,15 @@ class BaseProjet(BaseEvenement):
         help_text="Vidéo unique de démonstration"
     )
     
-    # Remplacement du champ d'upload par un champ de lien
+    # --- MODIFICATION ---
+    # Remplacement du champ d'upload par un champ de lien URL
     url_code_source = models.URLField(
         max_length=500, 
         blank=True, null=True, 
         help_text="Lien vers le dépôt GitHub, GitLab, etc.",
         verbose_name="Lien Code Source"
     )
+    # --- FIN MODIFICATION ---
     
     class Meta(BaseEvenement.Meta):
         abstract = True
@@ -175,7 +177,6 @@ class MediaProjetPersonnel(models.Model):
         verbose_name = "Média (Photo Projet Perso)"
     def __str__(self):
         return f"Photo pour {self.projet.titre}"
-
 
 # --- MODÈLES RELATIONNELS (POUR L'ADMIN INTUITIF) ---
 

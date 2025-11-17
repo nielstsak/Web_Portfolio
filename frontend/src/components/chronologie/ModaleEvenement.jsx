@@ -120,7 +120,6 @@ const AffichageSpecificites = ({ type, specificites }) => {
         <AffichageMissions items={travail_effectue} titre="Travail Détaillé" />
 
         {/* --- MODIFICATION --- */}
-        {/* Le bouton utilise maintenant 'url_code_source' et s'affiche comme un lien */}
         {url_code_source && (
           <Button 
             variant="outlined" 

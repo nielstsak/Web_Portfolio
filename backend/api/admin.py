@@ -112,17 +112,18 @@ class BaseProjetAdmin(admin.ModelAdmin):
             'fields': ('titre', 'introduction', 'role', ('date_debut', 'date_fin'))
         }),
         ('Détails Techniques', {
-            'fields': ('technologies', 'media_video', 'code_source_zip')
+            'fields': ('technologies', 'media_video', 'url_code_source') # MODIFIÉ
         }),
     )
 
-    # --- LOGGING DÉTAILLÉ (RÉ-AJOUTÉ) ---
+    # --- LOGGING DÉTAILLÉ (CONSERVÉ) ---
     def save_model(self, request, obj, form, change):
         print("--- LOGGING ADMIN SAVE_MODEL ---", file=sys.stdout)
         try:
             if 'media_video' in request.FILES:
                 print(f"[ADMIN] Fichier 'media_video' détecté: {request.FILES['media_video'].name}", file=sys.stdout)
             
+            # Ce log ne s'activera plus car le champ a changé
             if 'code_source_zip' in request.FILES:
                 print(f"[ADMIN] Fichier 'code_source_zip' détecté: {request.FILES['code_source_zip'].name}", file=sys.stdout)
 
@@ -132,16 +133,20 @@ class BaseProjetAdmin(admin.ModelAdmin):
 
             if obj.media_video:
                 print(f"[ADMIN] Retour Cloudinary 'media_video' URL: {getattr(obj.media_video, 'url', 'Pas dURL')}", file=sys.stdout)
-            if obj.code_source_zip:
-                print(f"[ADMIN] Retour Cloudinary 'code_source_zip' URL: {getattr(obj.code_source_zip, 'url', 'Pas dURL')}", file=sys.stdout)
+            
+            # Log du nouveau champ URL
+            if obj.url_code_source:
+                print(f"[ADMIN] 'url_code_source' sauvegardé: {obj.url_code_source}", file=sys.stdout)
+            else:
+                print("[ADMIN] Pas de 'url_code_source' sauvegardé.", file=sys.stdout)
 
         except Exception as e:
-            # Intercepte l'erreur 500 et la logge
             print(f"[ADMIN] ERREUR CRITIQUE PENDANT save_model: {type(e).__name__} - {e}", file=sys.stdout)
             raise
         finally:
             print("--- FIN LOGGING ADMIN SAVE_MODEL ---", file=sys.stdout)
     # --- FIN LOGGING ---
+
 
 @admin.register(ProjetProfessionnel)
 class ProjetProfessionnelAdmin(BaseProjetAdmin):
@@ -155,7 +160,7 @@ class ProjetEtudiantAdmin(BaseProjetAdmin):
             'fields': ('titre', 'institution', 'introduction', 'role', ('date_debut', 'date_fin'))
         }),
         ('Détails Techniques', {
-            'fields': ('technologies', 'media_video', 'code_source_zip')
+            'fields': ('technologies', 'media_video', 'url_code_source') # MODIFIÉ
         }),
     )
     list_display = ('titre', 'date_debut', 'institution', 'role')
@@ -183,3 +188,7 @@ class ServiceCiviqueAdmin(admin.ModelAdmin):
     search_fields = ('mission', 'organisme_accueil',)
     inlines = [MissionServiceCiviqueInline]
 
+# Lignes conservées (car elles fonctionnaient pour votre navigation)
+admin.site.register(MediaProjetProfessionnel)
+admin.site.register(MediaProjetEtudiant)
+admin.site.register(MediaProjetPersonnel)
