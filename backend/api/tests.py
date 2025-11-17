@@ -1,24 +1,20 @@
 # backend/api/tests.py
-
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
-from .models import Projet # Import du modèle 'Projet'
-
-# Note : Les tests relatifs à 'ContactMessage' ont été retirés
-# car le modèle a été supprimé dans la migration 0009.
+from .models import ProjetProfessionnel # <-- CORRIGÉ
 
 class TestsApi(APITestCase):
 
     def setUp(self):
         """Configuration initiale pour les tests : crée des projets."""
-        Projet.objects.create(titre="Projet Test 1", description="Une description.")
-        Projet.objects.create(titre="Projet Test 2", description="Une autre description.")
+        ProjetProfessionnel.objects.create(titre="Projet Test 1", introduction="Une description.") # <-- CORRIGÉ
+        ProjetProfessionnel.objects.create(titre="Projet Test 2", introduction="Une autre description.") # <-- CORRIGÉ
 
     def test_obtenir_liste_projets(self):
         """Vérifie que l'API retourne correctement la liste des projets."""
         # Préparation
-        url_api = reverse('projet-list') # Utilise le 'basename' défini dans urls.py
+        url_api = reverse('projet-pro-list') # <-- CORRIGÉ (basename 'projet-pro' de urls.py)
         
         # Action
         reponse = self.client.get(url_api, format='json')
