@@ -58,7 +58,7 @@ const AffichageSpecificites = ({ type, specificites }) => {
   if (type.startsWith('Projets')) {
     const { 
       institution, role, technologies, media_video, 
-      media_photos, code_source_zip, travail_effectue 
+      media_photos, url_code_source, travail_effectue // <-- MODIFIÉ
     } = specificites;
     
     return (
@@ -119,18 +119,21 @@ const AffichageSpecificites = ({ type, specificites }) => {
 
         <AffichageMissions items={travail_effectue} titre="Travail Détaillé" />
 
-        {code_source_zip && (
+        {/* --- MODIFICATION --- */}
+        {/* Le bouton utilise maintenant 'url_code_source' et s'affiche comme un lien */}
+        {url_code_source && (
           <Button 
             variant="outlined" 
-            href={code_source_zip} 
+            href={url_code_source} 
             target="_blank" 
             rel="noopener" 
             startIcon={<CodeIcon />}
             sx={{ mt: 2 }}
           >
-            Voir le code source (.zip)
+            Voir le code source
           </Button>
         )}
+        {/* --- FIN MODIFICATION --- */}
       </Box>
     );
   }

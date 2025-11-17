@@ -87,16 +87,14 @@ class BaseProjet(BaseEvenement):
         help_text="Vidéo unique de démonstration"
     )
     
-    # --- CORRECTION ---
-    # Remplacer FileField par CloudinaryField avec resource_type='raw'
-    code_source_zip = CloudinaryField(
-        resource_type='raw',
-        folder='project_sources',
-        null=True, blank=True, 
-        help_text="Archive ZIP du code source."
+    # Remplacement du champ d'upload par un champ de lien
+    url_code_source = models.URLField(
+        max_length=500, 
+        blank=True, null=True, 
+        help_text="Lien vers le dépôt GitHub, GitLab, etc.",
+        verbose_name="Lien Code Source"
     )
-    # --- FIN CORRECTION ---
-
+    
     class Meta(BaseEvenement.Meta):
         abstract = True
     def __str__(self):
@@ -177,6 +175,7 @@ class MediaProjetPersonnel(models.Model):
         verbose_name = "Média (Photo Projet Perso)"
     def __str__(self):
         return f"Photo pour {self.projet.titre}"
+
 
 # --- MODÈLES RELATIONNELS (POUR L'ADMIN INTUITIF) ---
 
