@@ -116,7 +116,7 @@ class BaseProjetAdmin(admin.ModelAdmin):
         }),
     )
 
-    # --- LOGGING DÉTAILLÉ ---
+    # --- LOGGING DÉTAILLÉ (RÉ-AJOUTÉ) ---
     def save_model(self, request, obj, form, change):
         print("--- LOGGING ADMIN SAVE_MODEL ---", file=sys.stdout)
         try:
@@ -136,12 +136,12 @@ class BaseProjetAdmin(admin.ModelAdmin):
                 print(f"[ADMIN] Retour Cloudinary 'code_source_zip' URL: {getattr(obj.code_source_zip, 'url', 'Pas dURL')}", file=sys.stdout)
 
         except Exception as e:
+            # Intercepte l'erreur 500 et la logge
             print(f"[ADMIN] ERREUR CRITIQUE PENDANT save_model: {type(e).__name__} - {e}", file=sys.stdout)
             raise
         finally:
             print("--- FIN LOGGING ADMIN SAVE_MODEL ---", file=sys.stdout)
     # --- FIN LOGGING ---
-
 
 @admin.register(ProjetProfessionnel)
 class ProjetProfessionnelAdmin(BaseProjetAdmin):
@@ -183,6 +183,3 @@ class ServiceCiviqueAdmin(admin.ModelAdmin):
     search_fields = ('mission', 'organisme_accueil',)
     inlines = [MissionServiceCiviqueInline]
 
-admin.site.register(MediaProjetProfessionnel)
-admin.site.register(MediaProjetEtudiant)
-admin.site.register(MediaProjetPersonnel)
