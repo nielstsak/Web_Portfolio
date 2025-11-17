@@ -194,6 +194,12 @@ function ModaleEvenement({ evenement, ouvert, onFermer }) {
       open={ouvert}
       onClose={onFermer}
       closeAfterTransition
+      BackdropProps={{
+        sx: {
+          backdropFilter: 'blur(3px)',
+          backgroundColor: 'rgba(0,0,0,0.5)'
+        }
+      }}
     >
       <AnimatePresence>
         {ouvert && (

@@ -1,22 +1,17 @@
 // frontend/src/components/chronologie/CalendrierActivite.jsx
 
-import { Box, Typography, Paper, Tooltip } from '@mui/material';
+import { Box, Typography, Tooltip } from '@mui/material';
 
-// Mappage des couleurs (HEX pour la cohérence)
+// Mappage des couleurs (RGBA pour la transparence)
 const COULEURS_TYPES = {
-  'Formation': '#0288d1',
-  'Activité rémunératrice': '#ed6c02',
-  'Service civique': '#9c27b0',
-  'Projets Etudiant': '#2e7d32',
-  'Projets Professionnels': '#2e7d32',
-  'Projets Personnels': '#2e7d32',
+  'Formation': 'rgba(2, 136, 209, 0.7)',
+  'Activité rémunératrice': 'rgba(237, 108, 2, 0.7)',
+  'Service civique': 'rgba(156, 39, 176, 0.7)',
+  'Projets Etudiant': 'rgba(46, 125, 50, 0.7)',
+  'Projets Professionnels': 'rgba(46, 125, 50, 0.7)',
+  'Projets Personnels': 'rgba(46, 125, 50, 0.7)',
 };
 
-// ... (le reste du fichier 'CalendrierActivite.jsx' est inchangé)
-// ... (obtenirPlageAnnees, estActifCeMois, et le composant CalendrierActivite)
-
-// ... (coller le reste du fichier original ici)
-// Constantes pour la grille
 const MOIS = ['Janv', 'Fév', 'Mars', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sept', 'Oct', 'Nov', 'Déc'];
 
 /**
@@ -40,7 +35,6 @@ const obtenirPlageAnnees = (evenements) => {
       const anneeFin = new Date(evt.date_fin).getFullYear();
       anneeMax = Math.max(anneeMax, anneeFin);
     } else {
-      // Si pas de date de fin, l'activité max est l'année en cours
       anneeMax = Math.max(anneeMax, new Date().getFullYear());
     }
   });
@@ -49,12 +43,8 @@ const obtenirPlageAnnees = (evenements) => {
   return Array.from({ length: anneeMax - anneeMin + 1 }, (_, i) => anneeMax - i);
 };
 
-/**
- * Vérifie si un événement était actif pendant un mois/année donné.
- */
 const estActifCeMois = (evt, annee, mois) => {
   const debutEvt = new Date(evt.date_debut);
-  // Si pas de date de fin, on considère l'événement comme actif jusqu'à aujourd'hui
   const finEvt = evt.date_fin ? new Date(evt.date_fin) : new Date();
 
   // Date de début du mois [annee, mois, 1]
@@ -62,13 +52,48 @@ const estActifCeMois = (evt, annee, mois) => {
   // Date de fin du mois [annee, mois+1, 0]
   const finMois = new Date(annee, mois + 1, 0); 
 
-  // L'événement se termine-t-il avant le début du mois ?
   if (finEvt < debutMois) return false;
-  // L'événement commence-t-il après la fin du mois ?
   if (debutEvt > finMois) return false;
   
   // Sinon, il y a chevauchement
   return true;
+};
+
+/**
+ * Calcule le style et le titre du tooltip pour une cellule de mois.
+ */
+const obtenirStyleCellule = (evenements, annee, indexMois) => {
+  // Trouve TOUS les événements actifs ce mois-ci
+  const evtsActifs = evenements.filter(evt => estActifCeMois(evt, annee, indexMois));
+  
+  if (evtsActifs.length === 0) {
+    return {
+      style: { backgroundColor: '#f5f5f5', opacity: 0.5 },
+      titre: 'Aucune activité'
+    };
+  }
+
+  // Combine les titres pour le tooltip
+  const titre = evtsActifs.map(e => e.titre).join(' | ');
+
+  // Cas 1: Un seul événement
+  if (evtsActifs.length === 1) {
+    const couleur = COULEURS_TYPES[evtsActifs[0].type] || 'rgba(224, 224, 224, 0.7)';
+    return {
+      style: { backgroundColor: couleur },
+      titre: titre
+    };
+  }
+
+  const couleur1 = COULEURS_TYPES[evtsActifs[0].type] || 'rgba(224, 224, 224, 0.7)';
+  const couleur2 = COULEURS_TYPES[evtsActifs[1].type] || 'rgba(224, 224, 224, 0.7)';
+  
+  return {
+    style: {
+      background: `linear-gradient(45deg, ${couleur1} 50%, ${couleur2} 50%)`,
+    },
+    titre: titre
+  };
 };
 
 /**
@@ -79,62 +104,53 @@ function CalendrierActivite({ evenements }) {
   const annees = obtenirPlageAnnees(evenements); // Déjà trié du plus récent au plus ancien
 
   return (
-    <Paper 
-      elevation={2} 
-      sx={{ p: 2, borderRadius: 2, overflowX: 'auto' }}
-    >
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'auto repeat(12, 1fr)', gap: '4px', minWidth: '600px' }}>
-        
-        {/* Entête des mois */}
-        <Box /> {/* Cellule vide pour le coin */}
-        {MOIS.map(mois => (
-          <Typography key={mois} variant="caption" sx={{ textAlign: 'center' }}>
-            {mois}
+    <Box sx={{ display: 'grid', gridTemplateColumns: 'auto repeat(12, 1fr)', gap: '4px', minWidth: '600px' }}>
+      
+      {/* Entête des mois */}
+      <Box /> {/* Cellule vide pour le coin */}
+      {MOIS.map(mois => (
+        <Typography key={mois} variant="caption" sx={{ textAlign: 'center' }}>
+          {mois}
+        </Typography>
+      ))}
+
+      {/* Grille Années / Mois */}
+      {annees.map(annee => (
+        <>
+          {/* Étiquette de l'année */}
+          <Typography 
+            key={`annee-${annee}`} 
+            variant="body2" 
+            sx={{ fontWeight: 600, pr: 1, textAlign: 'right', gridColumn: '1 / 2', alignSelf: 'center' }}
+          >
+            {annee}
           </Typography>
-        ))}
+          
+          {/* Cellules des mois */}
+          {MOIS.map((mois, indexMois) => {
+            const { style, titre } = obtenirStyleCellule(evenements, annee, indexMois);
 
-        {/* Grille Années / Mois */}
-        {annees.map(annee => (
-          // Fragment pour regrouper la ligne (label + 12 cellules)
-          <>
-            {/* Étiquette de l'année */}
-            <Typography 
-              key={`annee-${annee}`} 
-              variant="body2" 
-              sx={{ fontWeight: 600, pr: 1, textAlign: 'right', gridColumn: '1 / 2', alignSelf: 'center' }}
-            >
-              {annee}
-            </Typography>
-            
-            {/* Cellules des mois */}
-            {MOIS.map((mois, indexMois) => {
-              // Trouve le premier événement actif ce mois-ci pour la couleur
-              const evtActif = evenements.find(evt => estActifCeMois(evt, annee, indexMois));
-              const couleur = evtActif ? COULEURS_TYPES[evtActif.type] || '#e0e0e0' : '#f5f5f5';
-
-              return (
-                <Tooltip 
-                  key={`${annee}-${indexMois}`} 
-                  title={evtActif ? evtActif.titre : 'Aucune activité'} 
-                  arrow
-                >
-                  <Box
-                    sx={{
-                      width: '100%',
-                      paddingBottom: '100%', // Ratio 1:1
-                      backgroundColor: couleur,
-                      borderRadius: '2px',
-                      opacity: evtActif ? 1 : 0.5,
-                      gridColumn: `${indexMois + 2} / span 1`,
-                    }}
-                  />
-                </Tooltip>
-              );
-            })}
-          </>
-        ))}
-      </Box>
-    </Paper>
+            return (
+              <Tooltip 
+                key={`${annee}-${indexMois}`} 
+                title={titre} 
+                arrow
+              >
+                <Box
+                  sx={{
+                    width: '100%',
+                    paddingBottom: '100%', 
+                    borderRadius: '2px',
+                    ...style, 
+                    gridColumn: `${indexMois + 2} / span 1`,
+                  }}
+                />
+              </Tooltip>
+            );
+          })}
+        </>
+      ))}
+    </Box>
   );
 }
 

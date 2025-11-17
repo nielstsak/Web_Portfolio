@@ -1,6 +1,6 @@
 // frontend/src/components/SectionChronologie.jsx
 
-import { Container, Typography, Box, Divider } from '@mui/material';
+import { Container, Typography, Box, Divider, Paper } from '@mui/material';
 import { motion } from 'framer-motion';
 // Imports décommentés
 import ControlesFiltrage from './chronologie/ControlesFiltrage';
@@ -74,14 +74,21 @@ function SectionChronologie({ evenementsFiltres }) {
         </motion.div>
 
         {/* Calendrier (Tâche 15) */}
-        <motion.div variants={variantsElement} style={{ flexShrink: 0 }}>
-          <Divider sx={{ my: 4 }}>
-            <Typography variant="overline">Calendrier d'activité</Typography>
-          </Divider>
-        </motion.div>
-
-        <motion.div variants={variantsElement} style={{ flexShrink: 0 }}>
-          <CalendrierActivite evenements={evenementsFiltres} />
+        <motion.div variants={variantsElement} style={{ flexShrink: 0, marginTop: '32px' }}>
+          <Paper 
+            elevation={2} 
+            sx={{ 
+              p: 2, 
+              borderRadius: 2, 
+              overflow: 'hidden' 
+            }}
+          >
+            <Divider sx={{ mb: 2 }}>
+              <Typography variant="overline">Calendrier</Typography>
+            </Divider>
+            
+            <CalendrierActivite evenements={evenementsFiltres} />
+          </Paper>
         </motion.div>
 
       </motion.div>
