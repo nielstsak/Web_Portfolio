@@ -1,22 +1,12 @@
-// frontend/src/components/introduction/SkillsDisplay.jsx
-
-import { Box, Typography, List, ListItem, ListItemText, Tooltip } from '@mui/material';
+import { Box, Typography, List, ListItem, ListItemText, Tooltip, Divider } from '@mui/material';
 import { motion } from 'framer-motion';
 
-/**
- * Affiche la liste des diplômes et une grille des logos de compétences.
- * @param {{
- * diplomes: Array<{id: number, titre: string, institution: string}>,
- * competences: Array<{id: number, nom: string, logo: string}>
- * }} props
- */
-const AffichageCompetences = ({ diplomes, competences }) => (
+const AffichageCompetences = ({ diplomes, sectionsCompetences }) => (
   <>
-    {/* Section des diplômes */}
     <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>
       Diplômes
     </Typography>
-    <List dense> {/* 'dense' réduit la hauteur des éléments de la liste */}
+    <List dense>
       {diplomes.map((diplome) => (
         <ListItem key={diplome.id} sx={{ p: 0 }}>
           <ListItemText primary={diplome.titre} secondary={diplome.institution} />
@@ -24,29 +14,33 @@ const AffichageCompetences = ({ diplomes, competences }) => (
       ))}
     </List>
 
-    {/* Section des compétences */}
-    <Typography variant="subtitle1" sx={{ mt: 3, mb: 2, fontWeight: 'bold' }}>
-      Compétences
-    </Typography>
-    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
-      {competences.map((competence) => (
-        // 'Tooltip' affiche le nom de la compétence au survol
-        <Tooltip title={competence.nom} key={competence.id} arrow>
-          {/* Animation de survol sur chaque logo */}
-          <motion.div whileHover={{ scale: 1.15, rotate: 5, transition: { type: 'spring', stiffness: 400 } }}>
-            <Box
-              component="img"
-              src={competence.logo}
-              alt={competence.nom}
-              loading="lazy" // Chargement différé des images
-              sx={{
-                height: '5vh',
-                width: '5vh',
-                objectFit: 'contain'
-              }}
-            />
-          </motion.div>
-        </Tooltip>
+    <Box sx={{ mt: 3 }}>
+      {sectionsCompetences.map((section) => (
+        <Box key={section.id} sx={{ mb: 3 }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1, textTransform: 'uppercase', color: 'text.secondary', fontSize: '0.75rem' }}>
+            {section.titre}
+          </Typography>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 4, alignItems: 'center' }}>
+            {section.competences.map((competence) => (
+              <Tooltip title={competence.nom} key={competence.id} arrow>
+                <motion.div whileHover={{ scale: 1.15, rotate: 5, transition: { type: 'spring', stiffness: 400 } }}>
+                  <Box
+                    component="img"
+                    src={competence.logo}
+                    alt={competence.nom}
+                    loading="lazy"
+                    sx={{
+                      height: '4vh',
+                      width: '4vh',
+                      objectFit: 'contain'
+                    }}
+                  />
+                </motion.div>
+              </Tooltip>
+            ))}
+          </Box>
+          <Divider sx={{ mt: 2, opacity: 0.5 }} />
+        </Box>
       ))}
     </Box>
   </>

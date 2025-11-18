@@ -1,10 +1,9 @@
-# backend/api/serializers.py
 from rest_framework import serializers
 from .models import (
     Presentation,
     PosteCible,
     Diplome,
-    CompetenceTechnologique,
+    CompetenceTechnologique, SectionCompetence,
     Formation, 
     ActiviteProfessionnelle, MissionActivitePro,
     ServiceCivique, MissionServiceCivique,
@@ -13,13 +12,18 @@ from .models import (
     ProjetPersonnel, MediaProjetPersonnel, TravailEffectueProjetPerso,
 )
 
-# --- SÉRIALISEURS CONSERVÉS (INTRODUCTION) ---
-
 class CompetenceTechnologiqueSerializer(serializers.ModelSerializer):
     logo = serializers.FileField(use_url=True)
     class Meta:
         model = CompetenceTechnologique
         fields = ['id', 'nom', 'logo']
+
+class SectionCompetenceSerializer(serializers.ModelSerializer):
+    competences = CompetenceTechnologiqueSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = SectionCompetence
+        fields = ['id', 'titre', 'ordre', 'competences']
 
 class PresentationSerializer(serializers.ModelSerializer):
     photo = serializers.FileField(use_url=True)
@@ -38,13 +42,7 @@ class DiplomeSerializer(serializers.ModelSerializer):
         model = Diplome
         fields = ['id', 'titre', 'institution', 'parchemin']
 
-
-# --- SÉRIALISEUR DE BASE POUR TRANSFORMER LE TEXTE EN LISTE ---
-
 class BaseListSerializer(serializers.ModelSerializer):
-    """
-    Transforme le champ 'descriptions' (TextField) en une liste de strings.
-    """
     def to_representation(self, instance):
         ret = super().to_representation(instance)
         text_data = ret.get('descriptions')
@@ -56,8 +54,6 @@ class BaseListSerializer(serializers.ModelSerializer):
             
         ret['descriptions'] = list_data
         return ret
-
-# --- NOUVEAUX SÉRIALISEURS (POUR INLINES) ---
 
 class MissionActiviteProSerializer(BaseListSerializer):
     class Meta:
@@ -84,9 +80,6 @@ class TravailEffectueProjetPersoSerializer(BaseListSerializer):
         model = TravailEffectueProjetPerso
         fields = ['id', 'sous_titre', 'descriptions']
 
-
-# --- SÉRIALISEURS PRINCIPAUX (CHRONOLOGIE) ---
-
 class FormationSerializer(serializers.ModelSerializer):
     justificatif = serializers.FileField(use_url=True, required=False)
     class Meta:
@@ -105,9 +98,6 @@ class ServiceCiviqueSerializer(serializers.ModelSerializer):
         model = ServiceCivique
         fields = '__all__'
 
-
-# --- Sérialiseurs de Projets (avec médias imbriqués) ---
-
 class MediaProjetProfessionnelSerializer(serializers.ModelSerializer):
     image = serializers.FileField(use_url=True)
     class Meta:
@@ -119,7 +109,6 @@ class ProjetProfessionnelSerializer(serializers.ModelSerializer):
     media_video = serializers.FileField(use_url=True, required=False)
     technologies = CompetenceTechnologiqueSerializer(many=True, read_only=True)
     travail_effectue = TravailEffectueProjetProSerializer(many=True, read_only=True)
-    # url_code_source est déjà inclus par fields = '__all__'
 
     class Meta:
         model = ProjetProfessionnel
@@ -136,7 +125,6 @@ class ProjetEtudiantSerializer(serializers.ModelSerializer):
     media_video = serializers.FileField(use_url=True, required=False)
     technologies = CompetenceTechnologiqueSerializer(many=True, read_only=True)
     travail_effectue = TravailEffectueProjetEtuSerializer(many=True, read_only=True)
-    # url_code_source est déjà inclus par fields = '__all__'
 
     class Meta:
         model = ProjetEtudiant
@@ -153,7 +141,6 @@ class ProjetPersonnelSerializer(serializers.ModelSerializer):
     media_video = serializers.FileField(use_url=True, required=False)
     technologies = CompetenceTechnologiqueSerializer(many=True, read_only=True)
     travail_effectue = TravailEffectueProjetPersoSerializer(many=True, read_only=True)
-    # url_code_source est déjà inclus par fields = '__all__'
 
     class Meta:
         model = ProjetPersonnel

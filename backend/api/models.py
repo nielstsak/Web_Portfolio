@@ -1,14 +1,29 @@
-# backend/api/models.py
-
 from django.db import models
 from django.core.validators import FileExtensionValidator
-import sys
 from cloudinary.models import CloudinaryField
 
-# --- MODÈLES CONSERVÉS (POUR L'INTRODUCTION) ---
+class SectionCompetence(models.Model):
+    titre = models.CharField(max_length=100, verbose_name="Titre de la section")
+    ordre = models.IntegerField(default=0, help_text="Ordre d'affichage (plus petit = plus haut)")
+
+    class Meta:
+        verbose_name = "Section de Compétences"
+        verbose_name_plural = "Sections de Compétences"
+        ordering = ['ordre']
+
+    def __str__(self):
+        return self.titre
 
 class CompetenceTechnologique(models.Model):
     nom = models.CharField(max_length=100)
+    section = models.ForeignKey(
+        SectionCompetence, 
+        related_name='competences', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        verbose_name="Section / Catégorie"
+    )
     logo = CloudinaryField(
         resource_type='image',
         folder='competences_logos',
@@ -23,7 +38,9 @@ class CompetenceTechnologique(models.Model):
         return self.nom
 
 class Presentation(models.Model):
-    texte = models.TextField()
+    sous_titre = models.CharField(max_length=255, verbose_name="Sous-titre / Accroche", default="Développeur Passionné")
+    description = models.TextField(verbose_name="Description détaillée")
+    
     nom = models.CharField(max_length=100, default="John")
     prenom = models.CharField(max_length=100, default="Doe")
     email = models.EmailField(default="john.doe@example.com")
@@ -38,7 +55,7 @@ class Presentation(models.Model):
         verbose_name = "Texte de Présentation"
         verbose_name_plural = "Texte de Présentation"
     def __str__(self):
-        return "Texte de présentation du projet professionnel"
+        return "Fiche de présentation"
 
 class PosteCible(models.Model):
     nom = models.CharField(max_length=100)
@@ -60,8 +77,6 @@ class Diplome(models.Model):
     )
     def __str__(self):
         return self.titre
-
-# --- NOUVEAUX MODÈLES (CHRONOLOGIE) ---
 
 class BaseEvenement(models.Model):
     date_debut = models.DateField()
@@ -86,17 +101,12 @@ class BaseProjet(BaseEvenement):
         null=True, blank=True, 
         help_text="Vidéo unique de démonstration"
     )
-    
-    # --- MODIFICATION ---
-    # Remplacement du champ d'upload par un champ de lien URL
     url_code_source = models.URLField(
         max_length=500, 
         blank=True, null=True, 
         help_text="Lien vers le dépôt GitHub, GitLab, etc.",
         verbose_name="Lien Code Source"
     )
-    # --- FIN MODIFICATION ---
-    
     class Meta(BaseEvenement.Meta):
         abstract = True
     def __str__(self):
@@ -177,8 +187,6 @@ class MediaProjetPersonnel(models.Model):
         verbose_name = "Média (Photo Projet Perso)"
     def __str__(self):
         return f"Photo pour {self.projet.titre}"
-
-# --- MODÈLES RELATIONNELS (POUR L'ADMIN INTUITIF) ---
 
 class MissionActivitePro(models.Model):
     activite = models.ForeignKey(ActiviteProfessionnelle, related_name='missions', on_delete=models.CASCADE)

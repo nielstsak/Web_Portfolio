@@ -1,5 +1,3 @@
-// frontend/src/store/appStore.jsx
-
 import { create } from 'zustand';
 import axios from 'axios';
 
@@ -28,9 +26,7 @@ const normaliserProjet = (projet, type) => ({
     technologies: projet.technologies,
     media_video: projet.media_video,
     media_photos: projet.media_photos,
-    // --- MODIFICATION ---
-    url_code_source: projet.url_code_source, // Remplacement
-    // --- FIN MODIFICATION ---
+    url_code_source: projet.url_code_source,
     travail_effectue: projet.travail_effectue,
     institution: projet.institution || null,
   }
@@ -58,6 +54,7 @@ export const useAppStore = create((set, get) => ({
   postes: [],
   diplomes: [],
   competences: [],
+  sectionsCompetences: [],
   
   chargement: true,
   erreur: null,
@@ -78,6 +75,7 @@ export const useAppStore = create((set, get) => ({
         reponsePostes,
         reponseDiplomes,
         reponseCompetences,
+        reponseSectionsCompetences,
         reponseFormations,
         reponseActivites,
         reponseServices,
@@ -89,6 +87,7 @@ export const useAppStore = create((set, get) => ({
         clientApi.get('/postes/'),
         clientApi.get('/diplomes/'),
         clientApi.get('/competences/'),
+        clientApi.get('/sections-competences/'),
         clientApi.get('/formations/'),
         clientApi.get('/activites-professionnelles/'),
         clientApi.get('/services-civiques/'),
@@ -158,6 +157,7 @@ export const useAppStore = create((set, get) => ({
         postes: reponsePostes.data,
         diplomes: reponseDiplomes.data,
         competences: reponseCompetences.data,
+        sectionsCompetences: reponseSectionsCompetences.data,
         evenementsChronologiques: tousEvenements,
         chargement: false,
       });

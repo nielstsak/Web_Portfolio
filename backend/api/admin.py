@@ -1,5 +1,3 @@
-# backend/api/admin.py 
-
 from django.contrib import admin
 from django.utils.html import mark_safe
 import sys
@@ -10,7 +8,7 @@ from .models import (
     Presentation,
     PosteCible,
     Diplome,
-    CompetenceTechnologique,
+    CompetenceTechnologique, SectionCompetence,
     Formation, 
     ActiviteProfessionnelle, MissionActivitePro,
     ServiceCivique, MissionServiceCivique,
@@ -19,11 +17,15 @@ from .models import (
     ProjetPersonnel, MediaProjetPersonnel, TravailEffectueProjetPerso,
 )
 
-# --- MODÈLES CONSERVÉS ---
+@admin.register(SectionCompetence)
+class SectionCompetenceAdmin(admin.ModelAdmin):
+    list_display = ('titre', 'ordre')
+    ordering = ('ordre',)
 
 @admin.register(CompetenceTechnologique)
 class CompetenceTechnologiqueAdmin(admin.ModelAdmin):
-    list_display = ('nom', 'afficher_apercu_logo')
+    list_display = ('nom', 'section', 'afficher_apercu_logo')
+    list_filter = ('section',)
     def afficher_apercu_logo(self, competence):
         if competence.logo:
             return mark_safe(f'<img src="{competence.logo.url}" alt="{competence.nom}" height="40" >')
@@ -47,15 +49,12 @@ class DiplomeAdmin(admin.ModelAdmin):
 class PosteCibleAdmin(admin.ModelAdmin):
     pass
 
-# --- NOUVEAUX MODÈLES (CHRONOLOGIE) ---
-
 class BaseListInlineAdmin(admin.TabularInline):
     extra = 1
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows': 5, 'cols': 60})},
     }
 
-# --- Inlines pour les Missions / Travaux ---
 class MissionActiviteProInline(BaseListInlineAdmin):
     model = MissionActivitePro
     verbose_name = "Mission détaillée"
@@ -81,8 +80,6 @@ class TravailEffectueProjetPersoInline(BaseListInlineAdmin):
     verbose_name = "Section de travail effectué"
     verbose_name_plural = "Travail Détaillé"
 
-
-# --- Inlines pour les Médias de Projet ---
 class MediaProjetProfessionnelInline(admin.TabularInline):
     model = MediaProjetProfessionnel
     extra = 1
@@ -101,7 +98,6 @@ class MediaProjetPersonnelInline(admin.TabularInline):
     verbose_name = "Média (Carrousel Photo)"
     verbose_name_plural = "Médias (Carrousel Photos)"
 
-# --- Admins pour les Projets ---
 class BaseProjetAdmin(admin.ModelAdmin):
     list_display = ('titre', 'date_debut', 'date_fin', 'role')
     search_fields = ('titre', 'introduction', 'role')
@@ -112,18 +108,16 @@ class BaseProjetAdmin(admin.ModelAdmin):
             'fields': ('titre', 'introduction', 'role', ('date_debut', 'date_fin'))
         }),
         ('Détails Techniques', {
-            'fields': ('technologies', 'media_video', 'url_code_source') # MODIFIÉ
+            'fields': ('technologies', 'media_video', 'url_code_source')
         }),
     )
 
-    # --- LOGGING DÉTAILLÉ (CONSERVÉ) ---
     def save_model(self, request, obj, form, change):
         print("--- LOGGING ADMIN SAVE_MODEL ---", file=sys.stdout)
         try:
             if 'media_video' in request.FILES:
                 print(f"[ADMIN] Fichier 'media_video' détecté: {request.FILES['media_video'].name}", file=sys.stdout)
             
-            # Ce log ne s'activera plus car le champ a changé
             if 'code_source_zip' in request.FILES:
                 print(f"[ADMIN] Fichier 'code_source_zip' détecté: {request.FILES['code_source_zip'].name}", file=sys.stdout)
 
@@ -134,7 +128,6 @@ class BaseProjetAdmin(admin.ModelAdmin):
             if obj.media_video:
                 print(f"[ADMIN] Retour Cloudinary 'media_video' URL: {getattr(obj.media_video, 'url', 'Pas dURL')}", file=sys.stdout)
             
-            # Log du nouveau champ URL
             if obj.url_code_source:
                 print(f"[ADMIN] 'url_code_source' sauvegardé: {obj.url_code_source}", file=sys.stdout)
             else:
@@ -145,8 +138,6 @@ class BaseProjetAdmin(admin.ModelAdmin):
             raise
         finally:
             print("--- FIN LOGGING ADMIN SAVE_MODEL ---", file=sys.stdout)
-    # --- FIN LOGGING ---
-
 
 @admin.register(ProjetProfessionnel)
 class ProjetProfessionnelAdmin(BaseProjetAdmin):
@@ -160,7 +151,7 @@ class ProjetEtudiantAdmin(BaseProjetAdmin):
             'fields': ('titre', 'institution', 'introduction', 'role', ('date_debut', 'date_fin'))
         }),
         ('Détails Techniques', {
-            'fields': ('technologies', 'media_video', 'url_code_source') # MODIFIÉ
+            'fields': ('technologies', 'media_video', 'url_code_source')
         }),
     )
     list_display = ('titre', 'date_debut', 'institution', 'role')
@@ -168,8 +159,6 @@ class ProjetEtudiantAdmin(BaseProjetAdmin):
 @admin.register(ProjetPersonnel)
 class ProjetPersonnelAdmin(BaseProjetAdmin):
     inlines = [MediaProjetPersonnelInline, TravailEffectueProjetPersoInline]
-
-# --- Admins pour les autres Événements ---
 
 @admin.register(Formation)
 class FormationAdmin(admin.ModelAdmin):
@@ -188,7 +177,6 @@ class ServiceCiviqueAdmin(admin.ModelAdmin):
     search_fields = ('mission', 'organisme_accueil',)
     inlines = [MissionServiceCiviqueInline]
 
-# Lignes conservées (car elles fonctionnaient pour votre navigation)
 admin.site.register(MediaProjetProfessionnel)
 admin.site.register(MediaProjetEtudiant)
 admin.site.register(MediaProjetPersonnel)
