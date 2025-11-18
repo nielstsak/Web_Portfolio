@@ -7,15 +7,14 @@ import ModaleEvenement from './ModaleEvenement';
 
 // Mappage des couleurs (HEX pour la bordure)
 const COULEURS_TYPES = {
-  'Formation': '#0288d1', // info
-  'Activité rémunératrice': '#ed6c02', // warning
-  'Service civique': '#9c27b0', // secondary
-  'Projets Professionnels': '#2e7d32', // success
-  'Projets Etudiant': '#2e7d32', // success
-  'Projets Personnels': '#2e7d32', // success
+  'Formation': '#0288d1',
+  'Activité rémunératrice': '#ed6c02',
+  'Service civique': '#9c27b0',
+  'Projets Professionnels': '#2e7d32',
+  'Projets Etudiant': '#2e7d32',
+  'Projets Personnels': '#2e7d32',
 };
 
-// Formate les dates (ex: "Janv 2024" ou "Janv 2024 ⟶ Fév 2025")
 const formaterPeriode = (debut, fin) => {
   const optionsDate = { year: 'numeric', month: 'short' };
   const dateDebut = new Date(debut).toLocaleDateString('fr-FR', optionsDate);
@@ -28,20 +27,32 @@ const formaterPeriode = (debut, fin) => {
   return `${dateDebut} ⟶ ${dateFin}`;
 };
 
-/**
- * Affiche une carte individuelle pour un événement chronologique.
- * Gère l'ouverture de sa propre modale de détails.
- * @param {{ evenement: object }} props
- */
 function CarteEvenement({ evenement }) {
   const [modaleOuverte, setModaleOuverte] = useState(false);
 
-  const couleur = COULEURS_TYPES[evenement.type] || '#bdbdbd'; // Gris par défaut
+  const couleur = COULEURS_TYPES[evenement.type] || '#bdbdbd'; 
 
-  // Vérifie si c'est un projet et s'il a une image
+  // --- LOGIQUE DE SÉLECTION DU MÉDIA ---
   const isProjet = evenement.type.startsWith('Projets');
-  const media = evenement.specificites?.media_photos;
-  const imageUrl = (isProjet && media && media.length > 0) ? media[0].image : null;
+  const specificites = evenement.specificites || {};
+  const photos = specificites.media_photos;
+  const video = specificites.media_video;
+
+  let mediaSource = null;
+  let mediaType = null;
+
+  if (isProjet) {
+    // Priorité 1 : Première photo disponible
+    if (photos && photos.length > 0) {
+      mediaSource = photos[0].image;
+      mediaType = 'img';
+    } 
+    // Priorité 2 : Vidéo (affichée comme image statique)
+    else if (video) {
+      mediaSource = video;
+      mediaType = 'video';
+    }
+  }
 
   return (
     <>
@@ -57,31 +68,36 @@ function CarteEvenement({ evenement }) {
             height: '100%',
             cursor: 'pointer',
             borderRadius: 2,
-            borderLeft: `5px solid ${couleur}`, // Indicateur visuel du type
+            borderLeft: `5px solid ${couleur}`,
             overflow: 'hidden',
             display: 'flex',
             flexDirection: 'column',
-            p: 0, // Padding retiré pour que l'image touche les bords
+            p: 0,
             transition: 'box-shadow 0.3s ease',
             '&:hover': {
               boxShadow: 6,
             },
           }}
         >
-          {/* Affiche l'image si elle existe */}
-          {imageUrl && (
+          {/* --- AFFICHAGE DU MÉDIA --- */}
+          {mediaSource && (
             <CardMedia
-              component="img"
+              component={mediaType}
               height="160"
-              image={imageUrl}
-              alt={`Aperçu ${evenement.titre}`}
+              // 'image' est utilisé par le composant img, 'src' par video
+              image={mediaType === 'img' ? mediaSource : undefined}
+              src={mediaType === 'video' ? mediaSource : undefined}
+              alt={mediaType === 'img' ? `Aperçu ${evenement.titre}` : undefined}
               sx={{ objectFit: 'cover' }}
+              // Paramètres pour que la vidéo ressemble à une image (1ère frame)
+              controls={false}
+              muted
+              playsInline
+              preload="metadata" 
             />
           )}
           
-          {/* Contenu textuel dans un Box avec padding */}
           <Box sx={{ p: 2.5, display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-            {/* Entête de la carte */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
               <Typography variant="caption" sx={{ color: couleur, fontWeight: 600 }}>
                 {evenement.type}
@@ -91,15 +107,12 @@ function CarteEvenement({ evenement }) {
               </Typography>
             </Box>
             
-            {/* Contenu principal (titre normalisé) */}
             <Typography variant="h6" component="h3" sx={{ fontWeight: 600, mb: 1 }}>
               {evenement.titre}
             </Typography>
             
-            {/* Description (normalisée) */}
             {evenement.description && (
-              <Typography variant="body2" color="text.secondary" sx={{ flexGrow: 1 }}>
-                {/* Coupe la description pour l'aperçu */}
+               <Typography variant="body2" color="text.secondary" sx={{ flexGrow: 1 }}>
                 {String(evenement.description).substring(0, 120)}...
               </Typography>
             )}
@@ -107,7 +120,6 @@ function CarteEvenement({ evenement }) {
         </Paper>
       </motion.div>
 
-      {/* La modale est gérée ici */}
       <ModaleEvenement
         evenement={evenement}
         ouvert={modaleOuverte}
