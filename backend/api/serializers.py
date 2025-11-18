@@ -10,6 +10,7 @@ from .models import (
     ProjetProfessionnel, MediaProjetProfessionnel, TravailEffectueProjetPro,
     ProjetEtudiant, MediaProjetEtudiant, TravailEffectueProjetEtu,
     ProjetPersonnel, MediaProjetPersonnel, TravailEffectueProjetPerso,
+    SousTitrePresentation, # CORRIGÉ: Import manquant ajouté ici
 )
 
 class CompetenceTechnologiqueSerializer(serializers.ModelSerializer):
@@ -25,11 +26,19 @@ class SectionCompetenceSerializer(serializers.ModelSerializer):
         model = SectionCompetence
         fields = ['id', 'titre', 'ordre', 'competences']
 
+# NOUVEAU SERIALIZER (Obj. 1)
+class SousTitrePresentationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SousTitrePresentation
+        fields = ['titre', 'description', 'ordre'] 
+
 class PresentationSerializer(serializers.ModelSerializer):
     photo = serializers.FileField(use_url=True)
+    details = SousTitrePresentationSerializer(many=True, read_only=True) # MODIFIÉ pour inclure les détails
     class Meta:
         model = Presentation
-        fields = '__all__'
+        # MODIFIÉ pour n'inclure que les champs existants + le champ imbriqué 'details'
+        fields = ['id', 'nom', 'prenom', 'email', 'photo', 'details']
 
 class PosteCibleSerializer(serializers.ModelSerializer):
     class Meta:

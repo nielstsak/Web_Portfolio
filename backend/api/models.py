@@ -38,8 +38,7 @@ class CompetenceTechnologique(models.Model):
         return self.nom
 
 class Presentation(models.Model):
-    sous_titre = models.CharField(max_length=255, verbose_name="Sous-titre / Accroche", default="Développeur Passionné")
-    description = models.TextField(verbose_name="Description détaillée")
+    # Les champs 'sous_titre' et 'description' précédents sont retirés
     
     nom = models.CharField(max_length=100, default="John")
     prenom = models.CharField(max_length=100, default="Doe")
@@ -56,6 +55,20 @@ class Presentation(models.Model):
         verbose_name_plural = "Texte de Présentation"
     def __str__(self):
         return "Fiche de présentation"
+
+# NOUVEAU MODÈLE pour la flexibilité des sous-titres/descriptions (Obj. 1)
+class SousTitrePresentation(models.Model):
+    presentation = models.ForeignKey(Presentation, related_name='details', on_delete=models.CASCADE)
+    titre = models.CharField(max_length=255, verbose_name="Sous-titre / Accroche")
+    description = models.TextField(verbose_name="Description détaillée")
+    ordre = models.IntegerField(default=0, help_text="Ordre d'affichage")
+
+    class Meta:
+        verbose_name = "Détail de Présentation"
+        verbose_name_plural = "Détails de Présentation"
+        ordering = ['ordre']
+    def __str__(self):
+        return self.titre
 
 class PosteCible(models.Model):
     nom = models.CharField(max_length=100)
