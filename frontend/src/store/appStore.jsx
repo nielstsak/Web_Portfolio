@@ -50,7 +50,7 @@ export const useAppStore = create((set, get) => ({
   evenementsChronologiques: [], 
   typesFiltres: new Set(TOUS_LES_TYPES),
   
-  presentation: null,
+  presentation: null, // MODIFIÉ: Structure attendue avec le champ 'details'
   postes: [],
   diplomes: [],
   competences: [],

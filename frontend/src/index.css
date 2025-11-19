@@ -30,14 +30,20 @@ body, html {
   overflow-x: hidden; /* Empêche le défilement horizontal */
 }
 
+/* AJOUTÉ: Classe pour bloquer le défilement et compenser la barre de défilement (Obj. 3) */
+body.scroll-lock {
+  overflow: hidden;
+  /* La valeur peut varier, 15px est une estimation courante pour Windows/Linux. */
+  padding-right: 15px; 
+}
+
+
 /* Conteneur principal où l'application React est montée. */
 #root {
-  /* Crée un nouveau contexte de superposition. 
-     Utile pour que 'zIndex: -1' de l'arrière-plan animé fonctionne correctement. */
   isolation: isolate; 
   position: relative;
   width: 100%;
-  max-width: 1400px; /* Limite la largeur maximale du contenu */
+  max-width: 1400px; 
   min-height: 100vh; 
   display: flex;
   flex-direction: column;

@@ -1,7 +1,8 @@
 // frontend/src/components/chronologie/CarteEvenement.jsx
 
 import { useState } from 'react';
-import { Paper, Typography, Box, CardMedia } from '@mui/material';
+import { Paper, Typography, Box, CardMedia, IconButton } from '@mui/material'; 
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz'; // AJOUTÉ: Icône pour indiquer le détail 
 import { motion } from 'framer-motion';
 import ModaleEvenement from './ModaleEvenement'; 
 
@@ -32,7 +33,7 @@ function CarteEvenement({ evenement }) {
 
   const couleur = COULEURS_TYPES[evenement.type] || '#bdbdbd'; 
 
-  // --- LOGIQUE DE SÉLECTION DU MÉDIA ---
+  // --- LOGIQUE DE SÉLECTION DU MÉDIA (inchangée) ---
   const isProjet = evenement.type.startsWith('Projets');
   const specificites = evenement.specificites || {};
   const photos = specificites.media_photos;
@@ -54,6 +55,9 @@ function CarteEvenement({ evenement }) {
     }
   }
 
+  // AJOUTÉ: Hauteur fixe pour forcer l'uniformité 
+  const HAUTEUR_CARTE = 320; 
+
   return (
     <>
       <motion.div
@@ -65,7 +69,7 @@ function CarteEvenement({ evenement }) {
           elevation={2}
           onClick={() => setModaleOuverte(true)}
           sx={{
-            height: '100%',
+            height: HAUTEUR_CARTE, // HAUTEUR FIXE 
             cursor: 'pointer',
             borderRadius: 2,
             borderLeft: `5px solid ${couleur}`,
@@ -89,7 +93,7 @@ function CarteEvenement({ evenement }) {
               src={mediaType === 'video' ? mediaSource : undefined}
               alt={mediaType === 'img' ? `Aperçu ${evenement.titre}` : undefined}
               sx={{ objectFit: 'cover' }}
-              // Paramètres pour que la vidéo ressemble à une image (1ère frame)
+              // Paramètres pour que la vidéo soit traiter comme  une image (1ère frame)
               controls={false}
               muted
               playsInline
@@ -111,11 +115,14 @@ function CarteEvenement({ evenement }) {
               {evenement.titre}
             </Typography>
             
-            {evenement.description && (
-               <Typography variant="body2" color="text.secondary" sx={{ flexGrow: 1 }}>
-                {String(evenement.description).substring(0, 120)}...
-              </Typography>
-            )}
+            {/* MODIFIÉ: Remplacement de la description par un indicateur visuel  */}
+            <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end' }}>
+              <IconButton size="small" sx={{ color: couleur }} aria-label="Voir les détails">
+                <MoreHorizIcon />
+              </IconButton>
+            </Box>
+            {/* FIN MODIFICATION */}
+
           </Box>
         </Paper>
       </motion.div>

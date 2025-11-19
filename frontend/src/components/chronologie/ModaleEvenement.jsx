@@ -9,6 +9,7 @@ import CodeIcon from '@mui/icons-material/Code';
 import ArticleIcon from '@mui/icons-material/Article';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect } from 'react'; // AJOUTÉ
 
 const styleContenuModale = {
   width: { xs: '95%', md: '80%', lg: '60%' },
@@ -48,7 +49,6 @@ const AffichageMissions = ({ items, titre }) => {
     </Box>
   );
 };
-
 const AffichageSpecificites = ({ type, specificites }) => {
 
   if (type.startsWith('Projets')) {
@@ -181,6 +181,19 @@ const AffichageSpecificites = ({ type, specificites }) => {
 
 
 function ModaleEvenement({ evenement, ouvert, onFermer }) {
+  // AJOUTÉ: Logique de verrouillage du défilement du corps 
+  useEffect(() => {
+    // Scroll lock logic
+    if (ouvert) {
+      document.body.classList.add('scroll-lock');
+    } else {
+      document.body.classList.remove('scroll-lock');
+    }
+    // Cleanup function
+    return () => {
+      document.body.classList.remove('scroll-lock');
+    };
+  }, [ouvert]);
   if (!evenement) return null;
 
   return (
@@ -188,6 +201,8 @@ function ModaleEvenement({ evenement, ouvert, onFermer }) {
       open={ouvert}
       onClose={onFermer}
       closeAfterTransition
+      
+      disableScrollLock={true} 
       BackdropProps={{
         sx: {
           backdropFilter: 'blur(3px)',
@@ -198,6 +213,8 @@ function ModaleEvenement({ evenement, ouvert, onFermer }) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        // AJOUTÉ: Permet le défilement si la modale elle-même dépasse le viewport
+        overflowY: 'auto',
       }}
     >
       <AnimatePresence>

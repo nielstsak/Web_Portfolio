@@ -43,14 +43,19 @@ function Introduction({ estVisible }) {
               <InfosContact presentation={presentation} postes={postes} />
               <Divider sx={{ my: 3 }} />
               
-              {presentation?.sous_titre && (
-                <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
-                  {presentation.sous_titre}
-                </Typography>
-              )}
-              <Typography variant="body2" sx={{ color: 'text.secondary', whiteSpace: 'pre-wrap' }}>
-                {presentation?.description}
-              </Typography>
+              {/* MODIFIÉ: Itération sur les détails de présentation  */}
+              {presentation?.details?.map((detail, index) => (
+                <Box key={index} sx={{ mb: index < presentation.details.length - 1 ? 3 : 0 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
+                    {detail.titre}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: 'text.secondary', whiteSpace: 'pre-wrap' }}>
+                    {detail.description}
+                  </Typography>
+                </Box>
+              ))}
+              {/* FIN MODIFICATION */}
+
             </SectionPaper>
           </Grid>
           
