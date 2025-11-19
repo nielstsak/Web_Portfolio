@@ -1,17 +1,19 @@
 from rest_framework import serializers
 from .models import (
-    Presentation,
+    Presentation, SousTitrePresentation,
     PosteCible,
     Diplome,
     CompetenceTechnologique, SectionCompetence,
     Formation, 
-    ActiviteProfessionnelle, MissionActivitePro,
-    ServiceCivique, MissionServiceCivique,
-    ProjetProfessionnel, MediaProjetProfessionnel, TravailEffectueProjetPro,
-    ProjetEtudiant, MediaProjetEtudiant, TravailEffectueProjetEtu,
-    ProjetPersonnel, MediaProjetPersonnel, TravailEffectueProjetPerso,
-    SousTitrePresentation, # CORRIGÉ: Import manquant ajouté ici
+    ActiviteProfessionnelle,
+    ServiceCivique,
+    ProjetProfessionnel, MediaProjetProfessionnel,
+    ProjetEtudiant, MediaProjetEtudiant,
+    ProjetPersonnel, MediaProjetPersonnel,
+    DetailEvenement
 )
+
+# --- Serializers Transverses ---
 
 class CompetenceTechnologiqueSerializer(serializers.ModelSerializer):
     logo = serializers.FileField(use_url=True)
@@ -21,23 +23,20 @@ class CompetenceTechnologiqueSerializer(serializers.ModelSerializer):
 
 class SectionCompetenceSerializer(serializers.ModelSerializer):
     competences = CompetenceTechnologiqueSerializer(many=True, read_only=True)
-
     class Meta:
         model = SectionCompetence
         fields = ['id', 'titre', 'ordre', 'competences']
 
-# NOUVEAU SERIALIZER (Obj. 1)
 class SousTitrePresentationSerializer(serializers.ModelSerializer):
     class Meta:
         model = SousTitrePresentation
-        fields = ['titre', 'description', 'ordre'] 
+        fields = ['titre', 'description', 'ordre']
 
 class PresentationSerializer(serializers.ModelSerializer):
     photo = serializers.FileField(use_url=True)
-    details = SousTitrePresentationSerializer(many=True, read_only=True) # MODIFIÉ pour inclure les détails
+    details = SousTitrePresentationSerializer(many=True, read_only=True)
     class Meta:
         model = Presentation
-        # MODIFIÉ pour n'inclure que les champs existants + le champ imbriqué 'details'
         fields = ['id', 'nom', 'prenom', 'email', 'photo', 'details']
 
 class PosteCibleSerializer(serializers.ModelSerializer):
@@ -51,61 +50,49 @@ class DiplomeSerializer(serializers.ModelSerializer):
         model = Diplome
         fields = ['id', 'titre', 'institution', 'parchemin']
 
-class BaseListSerializer(serializers.ModelSerializer):
+class DetailEvenementSerializer(serializers.ModelSerializer):
+    """Sérialiseur générique pour les listes de tâches/missions."""
+    
     def to_representation(self, instance):
+        """Transforme le champ texte brut en liste de chaînes pour le frontend."""
         ret = super().to_representation(instance)
         text_data = ret.get('descriptions')
         
         if not text_data:
             list_data = []
         else:
+            # Découpe par ligne et supprime les espaces vides
             list_data = [line.strip() for line in text_data.splitlines() if line.strip()]
             
         ret['descriptions'] = list_data
         return ret
 
-class MissionActiviteProSerializer(BaseListSerializer):
     class Meta:
-        model = MissionActivitePro
-        fields = ['id', 'sous_titre', 'descriptions']
+        model = DetailEvenement
+        fields = ['id', 'sous_titre', 'descriptions', 'ordre']
 
-class MissionServiceCiviqueSerializer(BaseListSerializer):
-    class Meta:
-        model = MissionServiceCivique
-        fields = ['id', 'sous_titre', 'descriptions']
-
-class TravailEffectueProjetProSerializer(BaseListSerializer):
-    class Meta:
-        model = TravailEffectueProjetPro
-        fields = ['id', 'sous_titre', 'descriptions']
-
-class TravailEffectueProjetEtuSerializer(BaseListSerializer):
-    class Meta:
-        model = TravailEffectueProjetEtu
-        fields = ['id', 'sous_titre', 'descriptions']
-
-class TravailEffectueProjetPersoSerializer(BaseListSerializer):
-    class Meta:
-        model = TravailEffectueProjetPerso
-        fields = ['id', 'sous_titre', 'descriptions']
+# --- Serializers Événements ---
 
 class FormationSerializer(serializers.ModelSerializer):
     justificatif = serializers.FileField(use_url=True, required=False)
+    details = DetailEvenementSerializer(many=True, read_only=True)
     class Meta:
         model = Formation
         fields = '__all__'
 
 class ActiviteProfessionnelleSerializer(serializers.ModelSerializer):
-    missions = MissionActiviteProSerializer(many=True, read_only=True)
+    missions = DetailEvenementSerializer(source='details', many=True, read_only=True)
     class Meta:
         model = ActiviteProfessionnelle
         fields = '__all__'
 
 class ServiceCiviqueSerializer(serializers.ModelSerializer):
-    missions = MissionServiceCiviqueSerializer(many=True, read_only=True)
+    missions = DetailEvenementSerializer(source='details', many=True, read_only=True)
     class Meta:
         model = ServiceCivique
         fields = '__all__'
+
+# --- Serializers Projets ---
 
 class MediaProjetProfessionnelSerializer(serializers.ModelSerializer):
     image = serializers.FileField(use_url=True)
@@ -117,7 +104,8 @@ class ProjetProfessionnelSerializer(serializers.ModelSerializer):
     media_photos = MediaProjetProfessionnelSerializer(many=True, read_only=True)
     media_video = serializers.FileField(use_url=True, required=False)
     technologies = CompetenceTechnologiqueSerializer(many=True, read_only=True)
-    travail_effectue = TravailEffectueProjetProSerializer(many=True, read_only=True)
+    # Mappe la relation générique 'details' vers le nom attendu par le front
+    travail_effectue = DetailEvenementSerializer(source='details', many=True, read_only=True)
 
     class Meta:
         model = ProjetProfessionnel
@@ -133,7 +121,7 @@ class ProjetEtudiantSerializer(serializers.ModelSerializer):
     media_photos = MediaProjetEtudiantSerializer(many=True, read_only=True)
     media_video = serializers.FileField(use_url=True, required=False)
     technologies = CompetenceTechnologiqueSerializer(many=True, read_only=True)
-    travail_effectue = TravailEffectueProjetEtuSerializer(many=True, read_only=True)
+    travail_effectue = DetailEvenementSerializer(source='details', many=True, read_only=True)
 
     class Meta:
         model = ProjetEtudiant
@@ -149,7 +137,7 @@ class ProjetPersonnelSerializer(serializers.ModelSerializer):
     media_photos = MediaProjetPersonnelSerializer(many=True, read_only=True)
     media_video = serializers.FileField(use_url=True, required=False)
     technologies = CompetenceTechnologiqueSerializer(many=True, read_only=True)
-    travail_effectue = TravailEffectueProjetPersoSerializer(many=True, read_only=True)
+    travail_effectue = DetailEvenementSerializer(source='details', many=True, read_only=True)
 
     class Meta:
         model = ProjetPersonnel
