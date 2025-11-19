@@ -1,19 +1,15 @@
+// frontend/src/store/appStore.jsx
+
 import { create } from 'zustand';
 import axios from 'axios';
+import { TYPES_EVENEMENTS } from '../config';
 
 export const clientApi = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api',
+  timeout: 10000, // Timeout de sécurité
 });
 
-const TOUS_LES_TYPES = [
-  'Formation',
-  'Activité rémunératrice',
-  'Service civique',
-  'Projets Professionnels',
-  'Projets Etudiant',
-  'Projets Personnels'
-];
-
+// Helpers de normalisation (Purs)
 const normaliserProjet = (projet, type) => ({
   id: `${type}-${projet.id}`,
   type: type, 
@@ -32,144 +28,40 @@ const normaliserProjet = (projet, type) => ({
   }
 });
 
-const getApercuDescription = (missions) => {
-  try {
-    if (missions && missions.length > 0 && 
-        missions[0].descriptions && missions[0].descriptions.length > 0) {
-      const desc = missions[0].descriptions[0];
-      return typeof desc === 'string' ? desc : '';
-    }
-    return ''; 
-  } catch (e) {
-    console.warn("Erreur lors de la génération de l'aperçu de description:", e, missions);
-    return '';
+const extraireDescriptionActivite = (missions) => {
+  if (missions?.length > 0 && missions[0].descriptions?.length > 0) {
+    return missions[0].descriptions[0] || '';
   }
+  return ''; 
 };
 
 export const useAppStore = create((set, get) => ({
-  evenementsChronologiques: [], 
-  typesFiltres: new Set(TOUS_LES_TYPES),
-  
-  presentation: null, // MODIFIÉ: Structure attendue avec le champ 'details'
+  // --- État des Données ---
+  presentation: null,
   postes: [],
   diplomes: [],
   competences: [],
   sectionsCompetences: [],
   
-  chargement: true,
+  evenementsChronologiques: [], 
+  
+  // --- État de l'UI ---
+  typesFiltres: new Set(TYPES_EVENEMENTS),
+  chargementIntro: true,     // Chargement critique (Haut de page)
+  chargementChronologie: true, // Chargement secondaire
   erreur: null,
 
+  // --- Sélecteurs ---
   evenementsFiltres: () => {
     const { evenementsChronologiques, typesFiltres } = get();
-    if (typesFiltres.size === TOUS_LES_TYPES.length) {
+    // Si tous les filtres sont actifs, on retourne tout sans filtrer (optimisation)
+    if (typesFiltres.size === TYPES_EVENEMENTS.length) {
       return evenementsChronologiques;
     }
     return evenementsChronologiques.filter(evt => typesFiltres.has(evt.type));
   },
 
-  fetchAllData: async () => {
-    set({ chargement: true, erreur: null });
-    try {
-      const [
-        reponsePresentation,
-        reponsePostes,
-        reponseDiplomes,
-        reponseCompetences,
-        reponseSectionsCompetences,
-        reponseFormations,
-        reponseActivites,
-        reponseServices,
-        reponseProjetsPro,
-        reponseProjetsEtu,
-        reponseProjetsPerso,
-      ] = await Promise.all([
-        clientApi.get('/presentations/'),
-        clientApi.get('/postes/'),
-        clientApi.get('/diplomes/'),
-        clientApi.get('/competences/'),
-        clientApi.get('/sections-competences/'),
-        clientApi.get('/formations/'),
-        clientApi.get('/activites-professionnelles/'),
-        clientApi.get('/services-civiques/'),
-        clientApi.get('/projets-professionnels/'),
-        clientApi.get('/projets-etudiants/'),
-        clientApi.get('/projets-personnels/'),
-      ]);
-
-      const formations = reponseFormations.data.map(item => ({
-        id: `formation-${item.id}`,
-        type: 'Formation',
-        titre: item.titre,
-        date_debut: item.date_debut,
-        date_fin: item.date_fin,
-        description: item.description, 
-        specificites: { 
-          institution: item.institution,
-          description: item.description,
-          justificatif: item.justificatif,
-        }
-      }));
-
-      const activites = reponseActivites.data.map(item => ({
-        id: `activite-${item.id}`,
-        type: 'Activité rémunératrice',
-        titre: item.poste, 
-        date_debut: item.date_debut,
-        date_fin: item.date_fin,
-        description: getApercuDescription(item.missions),
-        specificites: {
-          poste: item.poste,
-          missions: item.missions,
-        }
-      }));
-
-      const services = reponseServices.data.map(item => ({
-        id: `service-${item.id}`,
-        type: 'Service civique',
-        titre: item.mission, 
-        date_debut: item.date_debut,
-        date_fin: item.date_fin,
-        description: getApercuDescription(item.missions),
-        specificites: {
-          mission: item.mission,
-          organisme_accueil: item.organisme_accueil,
-          missions: item.missions,
-        }
-      }));
-
-      const projetsPro = reponseProjetsPro.data.map(p => normaliserProjet(p, 'Projets Professionnels'));
-      const projetsEtu = reponseProjetsEtu.data.map(p => normaliserProjet(p, 'Projets Etudiant'));
-      const projetsPerso = reponseProjetsPerso.data.map(p => normaliserProjet(p, 'Projets Personnels'));
-
-      const tousEvenements = [
-        ...formations,
-        ...activites,
-        ...services,
-        ...projetsPro,
-        ...projetsEtu,
-        ...projetsPerso,
-      ];
-      
-      tousEvenements.sort((a, b) => new Date(b.date_debut) - new Date(a.date_debut));
-
-      set({
-        presentation: reponsePresentation.data[0] || null,
-        postes: reponsePostes.data,
-        diplomes: reponseDiplomes.data,
-        competences: reponseCompetences.data,
-        sectionsCompetences: reponseSectionsCompetences.data,
-        evenementsChronologiques: tousEvenements,
-        chargement: false,
-      });
-
-    } catch (erreur) {
-      console.error("Échec de la récupération des données de l'application:", erreur);
-      set({
-        erreur: "Erreur lors de la récupération des données de l'application.",
-        chargement: false,
-      });
-    }
-  },
+  // --- Actions ---
 
   basculerFiltreType: (type) => {
     set((state) => {
@@ -180,6 +72,126 @@ export const useAppStore = create((set, get) => ({
         nouveauxFiltres.add(type);
       }
       return { typesFiltres: nouveauxFiltres };
+    });
+  },
+
+  /**
+   * Orchestrateur de chargement :
+   * Lance le chargement critique (Intro) et enchaîne avec le reste sans bloquer l'UI.
+   */
+  fetchAllData: async () => {
+    const { fetchIntroduction, fetchChronologie } = get();
+    
+    set({ erreur: null });
+
+    // 1. Chargement prioritaire : nécessaire pour le "First Contentful Paint" significatif
+    try {
+      await fetchIntroduction();
+    } catch (e) {
+      console.error("Erreur critique chargement intro:", e);
+      set({ erreur: "Impossible de charger le profil." });
+      return; // On arrête si l'intro plante
+    }
+
+    // 2. Chargement secondaire : exécuté en tâche de fond
+    fetchChronologie().catch(e => {
+      console.warn("Erreur chargement chronologie (non bloquant):", e);
+      // On peut choisir d'afficher une notification toast ici au lieu d'une erreur bloquante
+    });
+  },
+
+  fetchIntroduction: async () => {
+    set({ chargementIntro: true });
+    const [resPresentation, resPostes, resDiplomes, resCompetences, resSections] = await Promise.all([
+      clientApi.get('/presentations/'),
+      clientApi.get('/postes/'),
+      clientApi.get('/diplomes/'),
+      clientApi.get('/competences/'),
+      clientApi.get('/sections-competences/'),
+    ]);
+
+    set({
+      presentation: resPresentation.data[0] || null,
+      postes: resPostes.data,
+      diplomes: resDiplomes.data,
+      competences: resCompetences.data,
+      sectionsCompetences: resSections.data,
+      chargementIntro: false,
+    });
+  },
+
+  fetchChronologie: async () => {
+    set({ chargementChronologie: true });
+    
+    const [resFormations, resActivites, resServices, resProjetsPro, resProjetsEtu, resProjetsPerso] = await Promise.all([
+      clientApi.get('/formations/'),
+      clientApi.get('/activites-professionnelles/'),
+      clientApi.get('/services-civiques/'),
+      clientApi.get('/projets-professionnels/'),
+      clientApi.get('/projets-etudiants/'),
+      clientApi.get('/projets-personnels/'),
+    ]);
+
+    const formations = resFormations.data.map(item => ({
+      id: `formation-${item.id}`,
+      type: 'Formation',
+      titre: item.titre,
+      date_debut: item.date_debut,
+      date_fin: item.date_fin,
+      description: item.description, 
+      specificites: { 
+        institution: item.institution,
+        description: item.description,
+        justificatif: item.justificatif,
+      }
+    }));
+
+    const activites = resActivites.data.map(item => ({
+      id: `activite-${item.id}`,
+      type: 'Activité rémunératrice',
+      titre: item.poste, 
+      date_debut: item.date_debut,
+      date_fin: item.date_fin,
+      description: extraireDescriptionActivite(item.missions),
+      specificites: {
+        poste: item.poste,
+        missions: item.missions,
+      }
+    }));
+
+    const services = resServices.data.map(item => ({
+      id: `service-${item.id}`,
+      type: 'Service civique',
+      titre: item.mission, 
+      date_debut: item.date_debut,
+      date_fin: item.date_fin,
+      description: extraireDescriptionActivite(item.missions),
+      specificites: {
+        mission: item.mission,
+        organisme_accueil: item.organisme_accueil,
+        missions: item.missions,
+      }
+    }));
+
+    const projetsPro = resProjetsPro.data.map(p => normaliserProjet(p, 'Projets Professionnels'));
+    const projetsEtu = resProjetsEtu.data.map(p => normaliserProjet(p, 'Projets Etudiant'));
+    const projetsPerso = resProjetsPerso.data.map(p => normaliserProjet(p, 'Projets Personnels'));
+
+    const tousEvenements = [
+      ...formations,
+      ...activites,
+      ...services,
+      ...projetsPro,
+      ...projetsEtu,
+      ...projetsPerso,
+    ];
+    
+    // Tri descendant par date
+    tousEvenements.sort((a, b) => new Date(b.date_debut) - new Date(a.date_debut));
+
+    set({
+      evenementsChronologiques: tousEvenements,
+      chargementChronologie: false,
     });
   },
 }));
