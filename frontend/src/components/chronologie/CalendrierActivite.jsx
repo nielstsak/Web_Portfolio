@@ -1,16 +1,7 @@
 // frontend/src/components/chronologie/CalendrierActivite.jsx
 
 import { Box, Typography, Tooltip } from '@mui/material';
-
-// Mappage des couleurs (RGBA pour la transparence)
-const COULEURS_TYPES = {
-  'Formation': 'rgba(2, 136, 209, 0.7)',
-  'Activité rémunératrice': 'rgba(237, 108, 2, 0.7)',
-  'Service civique': 'rgba(156, 39, 176, 0.7)',
-  'Projets Etudiant': 'rgba(46, 125, 50, 0.7)',
-  'Projets Professionnels': 'rgba(46, 125, 50, 0.7)',
-  'Projets Personnels': 'rgba(46, 125, 50, 0.7)',
-};
+import { COULEURS_TYPES_RGBA } from '../../config';
 
 const MOIS = ['Janv', 'Fév', 'Mars', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sept', 'Oct', 'Nov', 'Déc'];
 
@@ -18,13 +9,14 @@ const MOIS = ['Janv', 'Fév', 'Mars', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Se
  * Calcule la plage d'années à afficher en fonction des événements fournis.
  */
 const obtenirPlageAnnees = (evenements) => {
-  if (evenements.length === 0) {
+  if (!evenements || evenements.length === 0) {
     const anneeActuelle = new Date().getFullYear();
     return Array.from({ length: 3 }, (_, i) => anneeActuelle - i); // 3 dernières années par défaut
   }
   
   let anneeMin = Infinity;
   let anneeMax = -Infinity;
+  const anneeCourante = new Date().getFullYear();
   
   evenements.forEach(evt => {
     const anneeDebut = new Date(evt.date_debut).getFullYear();
@@ -35,9 +27,14 @@ const obtenirPlageAnnees = (evenements) => {
       const anneeFin = new Date(evt.date_fin).getFullYear();
       anneeMax = Math.max(anneeMax, anneeFin);
     } else {
-      anneeMax = Math.max(anneeMax, new Date().getFullYear());
+      anneeMax = Math.max(anneeMax, anneeCourante);
     }
   });
+
+  // Sécurité pour éviter les boucles infinies si dates invalides
+  if (!isFinite(anneeMin) || !isFinite(anneeMax)) {
+     return [anneeCourante];
+  }
 
   // Crée un tableau [anneeMax, anneeMax-1, ..., anneeMin]
   return Array.from({ length: anneeMax - anneeMin + 1 }, (_, i) => anneeMax - i);
@@ -52,11 +49,8 @@ const estActifCeMois = (evt, annee, mois) => {
   // Date de fin du mois [annee, mois+1, 0]
   const finMois = new Date(annee, mois + 1, 0); 
 
-  if (finEvt < debutMois) return false;
-  if (debutEvt > finMois) return false;
-  
-  // Sinon, il y a chevauchement
-  return true;
+  // Correction logique de chevauchement
+  return (debutEvt <= finMois) && (finEvt >= debutMois);
 };
 
 /**
@@ -78,15 +72,16 @@ const obtenirStyleCellule = (evenements, annee, indexMois) => {
 
   // Cas 1: Un seul événement
   if (evtsActifs.length === 1) {
-    const couleur = COULEURS_TYPES[evtsActifs[0].type] || 'rgba(224, 224, 224, 0.7)';
+    const couleur = COULEURS_TYPES_RGBA[evtsActifs[0].type] || 'rgba(224, 224, 224, 0.7)';
     return {
       style: { backgroundColor: couleur },
       titre: titre
     };
   }
 
-  const couleur1 = COULEURS_TYPES[evtsActifs[0].type] || 'rgba(224, 224, 224, 0.7)';
-  const couleur2 = COULEURS_TYPES[evtsActifs[1].type] || 'rgba(224, 224, 224, 0.7)';
+  // Cas 2: Plusieurs événements (Dégradé)
+  const couleur1 = COULEURS_TYPES_RGBA[evtsActifs[0].type] || 'rgba(224, 224, 224, 0.7)';
+  const couleur2 = COULEURS_TYPES_RGBA[evtsActifs[1].type] || 'rgba(224, 224, 224, 0.7)';
   
   return {
     style: {
@@ -97,37 +92,37 @@ const obtenirStyleCellule = (evenements, annee, indexMois) => {
 };
 
 /**
- * Affiche un calendrier d'activité basé sur les événements filtrés.
+ * Affiche un calendrier d'activité heatmap basé sur les événements filtrés.
  * @param {{ evenements: Array<object> }} props
  */
 function CalendrierActivite({ evenements }) {
-  const annees = obtenirPlageAnnees(evenements); // Déjà trié du plus récent au plus ancien
+  const annees = obtenirPlageAnnees(evenements);
 
   return (
     <Box sx={{ display: 'grid', gridTemplateColumns: 'auto repeat(12, 1fr)', gap: '4px', minWidth: '600px' }}>
       
       {/* Entête des mois */}
-      <Box /> {/* Cellule vide pour le coin */}
+      <Box /> {/* Cellule vide coin supérieur gauche */}
       {MOIS.map(mois => (
-        <Typography key={mois} variant="caption" sx={{ textAlign: 'center' }}>
+        <Typography key={mois} variant="caption" sx={{ textAlign: 'center', fontWeight: 500, color: 'text.secondary' }}>
           {mois}
         </Typography>
       ))}
 
       {/* Grille Années / Mois */}
       {annees.map(annee => (
-        <>
+        <Box key={`row-${annee}`} sx={{ display: 'contents' }}> {/* fragment virtuel pour la grille */}
           {/* Étiquette de l'année */}
           <Typography 
-            key={`annee-${annee}`} 
+            key={`label-${annee}`} 
             variant="body2" 
-            sx={{ fontWeight: 600, pr: 1, textAlign: 'right', gridColumn: '1 / 2', alignSelf: 'center' }}
+            sx={{ fontWeight: 600, pr: 1, textAlign: 'right', alignSelf: 'center', color: 'text.primary' }}
           >
             {annee}
           </Typography>
           
           {/* Cellules des mois */}
-          {MOIS.map((mois, indexMois) => {
+          {MOIS.map((_, indexMois) => {
             const { style, titre } = obtenirStyleCellule(evenements, annee, indexMois);
 
             return (
@@ -139,16 +134,17 @@ function CalendrierActivite({ evenements }) {
                 <Box
                   sx={{
                     width: '100%',
-                    paddingBottom: '100%', 
-                    borderRadius: '2px',
+                    paddingBottom: '100%', // Ratio carré
+                    borderRadius: '3px',
                     ...style, 
-                    gridColumn: `${indexMois + 2} / span 1`,
+                    transition: 'transform 0.1s ease',
+                    '&:hover': { transform: 'scale(1.15)', zIndex: 1 }
                   }}
                 />
               </Tooltip>
             );
           })}
-        </>
+        </Box>
       ))}
     </Box>
   );
