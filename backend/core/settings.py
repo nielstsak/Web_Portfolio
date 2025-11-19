@@ -121,9 +121,3 @@ CLOUDINARY_STORAGE = {
 }
 MEDIA_URL = '/media/' 
 
-print("--- DEBUG CONFIGURATION CLOUDINARY ---")
-print(f"Django Version: 5.x detected (Using STORAGES setting)")
-print(f"DEBUG Mode: {DEBUG}")
-print(f"CLOUDINARY_URL Configured: {bool(os.environ.get('CLOUDINARY_URL'))}")
-print(f"MEDIA_URL: {MEDIA_URL}")
-print("--- FIN DEBUG CONFIGURATION ---")
