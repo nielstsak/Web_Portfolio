@@ -1,182 +1,144 @@
-from django.contrib import admin
-from django.utils.html import mark_safe
-import sys
-from django.db import models
-from django.forms import Textarea
-
+from rest_framework import serializers
 from .models import (
-    Presentation,
+    Presentation, SousTitrePresentation,
     PosteCible,
     Diplome,
     CompetenceTechnologique, SectionCompetence,
     Formation, 
-    ActiviteProfessionnelle, MissionActivitePro,
-    ServiceCivique, MissionServiceCivique,
-    ProjetProfessionnel, MediaProjetProfessionnel, TravailEffectueProjetPro,
-    ProjetEtudiant, MediaProjetEtudiant, TravailEffectueProjetEtu,
-    ProjetPersonnel, MediaProjetPersonnel, TravailEffectueProjetPerso,
+    ActiviteProfessionnelle,
+    ServiceCivique,
+    ProjetProfessionnel, MediaProjetProfessionnel,
+    ProjetEtudiant, MediaProjetEtudiant,
+    ProjetPersonnel, MediaProjetPersonnel,
+    DetailEvenement
 )
 
-@admin.register(SectionCompetence)
-class SectionCompetenceAdmin(admin.ModelAdmin):
-    list_display = ('titre', 'ordre')
-    ordering = ('ordre',)
+# --- Serializers Transverses ---
 
-@admin.register(CompetenceTechnologique)
-class CompetenceTechnologiqueAdmin(admin.ModelAdmin):
-    list_display = ('nom', 'section', 'afficher_apercu_logo')
-    list_filter = ('section',)
-    def afficher_apercu_logo(self, competence):
-        if competence.logo:
-            return mark_safe(f'<img src="{competence.logo.url}" alt="{competence.nom}" height="40" >')
-        return "Aucun logo"
-    afficher_apercu_logo.short_description = 'Aperçu du Logo'
+class CompetenceTechnologiqueSerializer(serializers.ModelSerializer):
+    logo = serializers.FileField(use_url=True)
+    class Meta:
+        model = CompetenceTechnologique
+        fields = ['id', 'nom', 'logo']
 
-@admin.register(Presentation)
-class PresentationAdmin(admin.ModelAdmin):
-    pass
+class SectionCompetenceSerializer(serializers.ModelSerializer):
+    competences = CompetenceTechnologiqueSerializer(many=True, read_only=True)
+    class Meta:
+        model = SectionCompetence
+        fields = ['id', 'titre', 'ordre', 'competences']
 
-@admin.register(Diplome)
-class DiplomeAdmin(admin.ModelAdmin):
-    list_display = ('titre', 'institution', 'afficher_parchemin')
-    def afficher_parchemin(self, diplome):
-        if diplome.parchemin:
-            return mark_safe(f'<a href="{diplome.parchemin.url}" target="_blank">Voir justificatif</a>')
-        return "Aucun justificatif"
-    afficher_parchemin.short_description = 'Justificatif'
+class SousTitrePresentationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SousTitrePresentation
+        fields = ['titre', 'description', 'ordre']
 
-@admin.register(PosteCible)
-class PosteCibleAdmin(admin.ModelAdmin):
-    pass
+class PresentationSerializer(serializers.ModelSerializer):
+    photo = serializers.FileField(use_url=True)
+    details = SousTitrePresentationSerializer(many=True, read_only=True)
+    class Meta:
+        model = Presentation
+        fields = ['id', 'nom', 'prenom', 'email', 'photo', 'details']
 
-class BaseListInlineAdmin(admin.TabularInline):
-    extra = 1
-    formfield_overrides = {
-        models.TextField: {'widget': Textarea(attrs={'rows': 5, 'cols': 60})},
-    }
+class PosteCibleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PosteCible
+        fields = '__all__'
 
-class MissionActiviteProInline(BaseListInlineAdmin):
-    model = MissionActivitePro
-    verbose_name = "Mission détaillée"
-    verbose_name_plural = "Missions détaillées"
+class DiplomeSerializer(serializers.ModelSerializer):
+    parchemin = serializers.FileField(use_url=True, required=False)
+    class Meta:
+        model = Diplome
+        fields = ['id', 'titre', 'institution', 'parchemin']
 
-class MissionServiceCiviqueInline(BaseListInlineAdmin):
-    model = MissionServiceCivique
-    verbose_name = "Mission détaillée"
-    verbose_name_plural = "Missions détaillées"
-
-class TravailEffectueProjetProInline(BaseListInlineAdmin):
-    model = TravailEffectueProjetPro
-    verbose_name = "Section de travail effectué"
-    verbose_name_plural = "Travail Détaillé"
-
-class TravailEffectueProjetEtuInline(BaseListInlineAdmin):
-    model = TravailEffectueProjetEtu
-    verbose_name = "Section de travail effectué"
-    verbose_name_plural = "Travail Détaillé"
-
-class TravailEffectueProjetPersoInline(BaseListInlineAdmin):
-    model = TravailEffectueProjetPerso
-    verbose_name = "Section de travail effectué"
-    verbose_name_plural = "Travail Détaillé"
-
-class MediaProjetProfessionnelInline(admin.TabularInline):
-    model = MediaProjetProfessionnel
-    extra = 1
-    verbose_name = "Média (Carrousel Photo)"
-    verbose_name_plural = "Médias (Carrousel Photos)"
-
-class MediaProjetEtudiantInline(admin.TabularInline):
-    model = MediaProjetEtudiant
-    extra = 1
-    verbose_name = "Média (Carrousel Photo)"
-    verbose_name_plural = "Médias (Carrousel Photos)"
-
-class MediaProjetPersonnelInline(admin.TabularInline):
-    model = MediaProjetPersonnel
-    extra = 1
-    verbose_name = "Média (Carrousel Photo)"
-    verbose_name_plural = "Médias (Carrousel Photos)"
-
-class BaseProjetAdmin(admin.ModelAdmin):
-    list_display = ('titre', 'date_debut', 'date_fin', 'role')
-    search_fields = ('titre', 'introduction', 'role')
-    list_filter = ('date_debut',)
-    filter_horizontal = ('technologies',)
-    fieldsets = (
-        ('Informations Générales', {
-            'fields': ('titre', 'introduction', 'role', ('date_debut', 'date_fin'))
-        }),
-        ('Détails Techniques', {
-            'fields': ('technologies', 'media_video', 'url_code_source')
-        }),
-    )
-
-    def save_model(self, request, obj, form, change):
-        print("--- LOGGING ADMIN SAVE_MODEL ---", file=sys.stdout)
-        try:
-            if 'media_video' in request.FILES:
-                print(f"[ADMIN] Fichier 'media_video' détecté: {request.FILES['media_video'].name}", file=sys.stdout)
+class DetailEvenementSerializer(serializers.ModelSerializer):
+    """Sérialiseur générique pour les listes de tâches/missions."""
+    
+    def to_representation(self, instance):
+        """Transforme le champ texte brut en liste de chaînes pour le frontend."""
+        ret = super().to_representation(instance)
+        text_data = ret.get('descriptions')
+        
+        if not text_data:
+            list_data = []
+        else:
+            # Découpe par ligne et supprime les espaces vides
+            list_data = [line.strip() for line in text_data.splitlines() if line.strip()]
             
-            if 'code_source_zip' in request.FILES:
-                print(f"[ADMIN] Fichier 'code_source_zip' détecté: {request.FILES['code_source_zip'].name}", file=sys.stdout)
+        ret['descriptions'] = list_data
+        return ret
 
-            print("[ADMIN] Tentative de super().save_model()", file=sys.stdout)
-            super().save_model(request, obj, form, change)
-            print("[ADMIN] super().save_model() RÉUSSI", file=sys.stdout)
+    class Meta:
+        model = DetailEvenement
+        fields = ['id', 'sous_titre', 'descriptions', 'ordre']
 
-            if obj.media_video:
-                print(f"[ADMIN] Retour Cloudinary 'media_video' URL: {getattr(obj.media_video, 'url', 'Pas dURL')}", file=sys.stdout)
-            
-            if obj.url_code_source:
-                print(f"[ADMIN] 'url_code_source' sauvegardé: {obj.url_code_source}", file=sys.stdout)
-            else:
-                print("[ADMIN] Pas de 'url_code_source' sauvegardé.", file=sys.stdout)
+# --- Serializers Événements ---
 
-        except Exception as e:
-            print(f"[ADMIN] ERREUR CRITIQUE PENDANT save_model: {type(e).__name__} - {e}", file=sys.stdout)
-            raise
-        finally:
-            print("--- FIN LOGGING ADMIN SAVE_MODEL ---", file=sys.stdout)
+class FormationSerializer(serializers.ModelSerializer):
+    justificatif = serializers.FileField(use_url=True, required=False)
+    details = DetailEvenementSerializer(many=True, read_only=True)
+    class Meta:
+        model = Formation
+        fields = '__all__'
 
-@admin.register(ProjetProfessionnel)
-class ProjetProfessionnelAdmin(BaseProjetAdmin):
-    inlines = [MediaProjetProfessionnelInline, TravailEffectueProjetProInline]
+class ActiviteProfessionnelleSerializer(serializers.ModelSerializer):
+    missions = DetailEvenementSerializer(source='details', many=True, read_only=True)
+    class Meta:
+        model = ActiviteProfessionnelle
+        fields = '__all__'
 
-@admin.register(ProjetEtudiant)
-class ProjetEtudiantAdmin(BaseProjetAdmin):
-    inlines = [MediaProjetEtudiantInline, TravailEffectueProjetEtuInline]
-    fieldsets = (
-        ('Informations Générales', {
-            'fields': ('titre', 'institution', 'introduction', 'role', ('date_debut', 'date_fin'))
-        }),
-        ('Détails Techniques', {
-            'fields': ('technologies', 'media_video', 'url_code_source')
-        }),
-    )
-    list_display = ('titre', 'date_debut', 'institution', 'role')
+class ServiceCiviqueSerializer(serializers.ModelSerializer):
+    missions = DetailEvenementSerializer(source='details', many=True, read_only=True)
+    class Meta:
+        model = ServiceCivique
+        fields = '__all__'
 
-@admin.register(ProjetPersonnel)
-class ProjetPersonnelAdmin(BaseProjetAdmin):
-    inlines = [MediaProjetPersonnelInline, TravailEffectueProjetPersoInline]
+# --- Serializers Projets ---
 
-@admin.register(Formation)
-class FormationAdmin(admin.ModelAdmin):
-    list_display = ('titre', 'institution', 'date_debut', 'date_fin')
-    search_fields = ('titre', 'institution', 'description')
+class MediaProjetProfessionnelSerializer(serializers.ModelSerializer):
+    image = serializers.FileField(use_url=True)
+    class Meta:
+        model = MediaProjetProfessionnel
+        fields = ['id', 'image', 'legende']
 
-@admin.register(ActiviteProfessionnelle)
-class ActiviteProfessionnelleAdmin(admin.ModelAdmin):
-    list_display = ('poste', 'date_debut', 'date_fin')
-    search_fields = ('poste',)
-    inlines = [MissionActiviteProInline]
+class ProjetProfessionnelSerializer(serializers.ModelSerializer):
+    media_photos = MediaProjetProfessionnelSerializer(many=True, read_only=True)
+    media_video = serializers.FileField(use_url=True, required=False)
+    technologies = CompetenceTechnologiqueSerializer(many=True, read_only=True)
+    # Mappe la relation générique 'details' vers le nom attendu par le front (ou standardise)
+    travail_effectue = DetailEvenementSerializer(source='details', many=True, read_only=True)
 
-@admin.register(ServiceCivique)
-class ServiceCiviqueAdmin(admin.ModelAdmin):
-    list_display = ('mission', 'organisme_accueil', 'date_debut', 'date_fin')
-    search_fields = ('mission', 'organisme_accueil',)
-    inlines = [MissionServiceCiviqueInline]
+    class Meta:
+        model = ProjetProfessionnel
+        fields = '__all__'
 
-admin.site.register(MediaProjetProfessionnel)
-admin.site.register(MediaProjetEtudiant)
-admin.site.register(MediaProjetPersonnel)
+class MediaProjetEtudiantSerializer(serializers.ModelSerializer):
+    image = serializers.FileField(use_url=True)
+    class Meta:
+        model = MediaProjetEtudiant
+        fields = ['id', 'image', 'legende']
+
+class ProjetEtudiantSerializer(serializers.ModelSerializer):
+    media_photos = MediaProjetEtudiantSerializer(many=True, read_only=True)
+    media_video = serializers.FileField(use_url=True, required=False)
+    technologies = CompetenceTechnologiqueSerializer(many=True, read_only=True)
+    travail_effectue = DetailEvenementSerializer(source='details', many=True, read_only=True)
+
+    class Meta:
+        model = ProjetEtudiant
+        fields = '__all__'
+
+class MediaProjetPersonnelSerializer(serializers.ModelSerializer):
+    image = serializers.FileField(use_url=True)
+    class Meta:
+        model = MediaProjetPersonnel
+        fields = ['id', 'image', 'legende']
+
+class ProjetPersonnelSerializer(serializers.ModelSerializer):
+    media_photos = MediaProjetPersonnelSerializer(many=True, read_only=True)
+    media_video = serializers.FileField(use_url=True, required=False)
+    technologies = CompetenceTechnologiqueSerializer(many=True, read_only=True)
+    travail_effectue = DetailEvenementSerializer(source='details', many=True, read_only=True)
+
+    class Meta:
+        model = ProjetPersonnel
+        fields = '__all__'
