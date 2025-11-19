@@ -1,3 +1,5 @@
+// frontend/src/components/Introduction.jsx
+
 import { Box, Grid, Typography, CircularProgress, Alert, Container, Divider } from '@mui/material';
 import { motion } from 'framer-motion';
 import { useAppStore } from '../store/appStore';
@@ -13,20 +15,36 @@ const variantsConteneur = {
   },
 };
 
+/**
+ * Section d'introduction (Haut de page).
+ * Orchestre l'affichage des sous-composants Contact et Compétences.
+ */
 function Introduction({ estVisible }) {
+  // Consommation directe des états de chargement/erreur
   const presentation = useAppStore((state) => state.presentation);
-  const postes = useAppStore((state) => state.postes);
-  const diplomes = useAppStore((state) => state.diplomes);
-  const sectionsCompetences = useAppStore((state) => state.sectionsCompetences);
-  const chargement = useAppStore((state) => state.loading);
-  const erreur = useAppStore((state) => state.error);
+  const chargement = useAppStore((state) => state.chargementIntro);
+  const erreur = useAppStore((state) => state.erreur);
 
   if (!estVisible) return null; 
-  if (chargement) return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}><CircularProgress color="inherit" /></Box>;
-  if (erreur) return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}><Alert severity="error">{erreur}</Alert></Box>;
+  
+  if (chargement) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+        <CircularProgress color="inherit" />
+      </Box>
+    );
+  }
+
+  if (erreur) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+        <Alert severity="error">{erreur}</Alert>
+      </Box>
+    );
+  }
 
   return (
-    <Container maxWidth="lg" sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+    <Container maxWidth="lg" sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', py: 4 }}>
       <motion.div 
         variants={variantsConteneur} 
         initial="hidden" 
@@ -35,36 +53,39 @@ function Introduction({ estVisible }) {
       >
         <Grid container spacing={4} alignItems="stretch">
           
-          <Grid item size={{ xs: 12, md: 7 }} >
+          {/* Colonne Gauche : Identité & Bio */}
+          <Grid item size={{ xs: 12, md: 7 }}>
             <SectionPaper>
-              <Typography variant="h5" component="h2" gutterBottom>
+              <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 600 }}>
                 Présentation
               </Typography>
-              <InfosContact presentation={presentation} postes={postes} />
+              
+              {/* Les composants enfants accèdent désormais au store eux-mêmes */}
+              <InfosContact />
+              
               <Divider sx={{ my: 3 }} />
               
-              {/* MODIFIÉ: Itération sur les détails de présentation  */}
-              {presentation?.details?.map((detail, index) => (
-                <Box key={index} sx={{ mb: index < presentation.details.length - 1 ? 3 : 0 }}>
-                  <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
-                    {detail.titre}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'text.secondary', whiteSpace: 'pre-wrap' }}>
-                    {detail.description}
-                  </Typography>
-                </Box>
+              {/* Affichage conditionnel des détails de présentation */}
+              {presentation?.details?.map((detail) => (
+                 <Box key={detail.id} sx={{ mb: 2 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 'bold', fontSize: '1.1rem', mb: 0.5 }}>
+                      {detail.titre}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: 'text.secondary', whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>
+                      {detail.description}
+                    </Typography>
+                 </Box>
               ))}
-              {/* FIN MODIFICATION */}
-
             </SectionPaper>
           </Grid>
           
-          <Grid item size={{ xs: 12, md: 5 }} >
+          {/* Colonne Droite : Compétences & Diplômes */}
+          <Grid item size={{ xs: 12, md: 5 }}>
             <SectionPaper>
-              <Typography variant="h5" component="h2" gutterBottom>
-                Diplômes & Compétences
+              <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 600 }}>
+                Compétences & Cursus
               </Typography>
-              <AffichageCompetences diplomes={diplomes} sectionsCompetences={sectionsCompetences} />
+              <AffichageCompetences />
             </SectionPaper>
           </Grid>
 
