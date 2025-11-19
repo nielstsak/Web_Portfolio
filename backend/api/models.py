@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
-from django.core.validators import FileExtensionValidator
 from cloudinary.models import CloudinaryField
 
 # --- Modèles Transverses ---
@@ -35,7 +34,6 @@ class CompetenceTechnologique(models.Model):
         folder='competences_logos',
         null=True,
         blank=True,
-        validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'webp', 'svg'])]
     )
 
     class Meta:
@@ -80,7 +78,6 @@ class Presentation(models.Model):
         folder='photos',
         null=True,
         blank=True,
-        validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'webp'])]
     )
 
     class Meta:
