@@ -1,55 +1,71 @@
 // frontend/src/components/introduction/ContactInfo.jsx
 
 import { Box, Typography, Avatar, Link, Grid, List, ListItem, ListItemText } from '@mui/material';
+import { useAppStore } from '../../store/appStore';
 
 /**
- * Affiche les informations de contact (photo, nom, email) et les postes ciblés.
- * @param {{
- * presentation: { photo: string, prenom: string, nom: string, email: string },
- * postes: Array<{id: number, nom: string}>
- * }} props
+ * Affiche la carte d'identité (Photo, Email) et les postes visés.
+ * Connecté au store global.
  */
-const InfosContact = ({ presentation, postes }) => (
-  // La grille principale divise la section en deux : contact à gauche, postes à droite.
-  <Grid container spacing={4} alignItems="center">
-    
-    {/* Partie Gauche : Photo, Nom, Email */}
-    <Grid item size={{ xs: 12, md: 7 }} >
-      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        {presentation?.photo && (
-          <Avatar
-            src={presentation.photo}
-            alt={`${presentation?.prenom} ${presentation?.nom}`}
-            variant="rounded"
-            sx={{ width: 100, height: 100, mr: 2.5 }} // Marge à droite
-          />
-        )}
-        <Box>
-          <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-            {`${presentation?.prenom} ${presentation?.nom}`}
-          </Typography>
-          <Link href={`mailto:${presentation?.email}`} variant="body2" color="primary">
-            {presentation?.email}
-          </Link>
+const InfosContact = () => {
+  const presentation = useAppStore((state) => state.presentation);
+  const postes = useAppStore((state) => state.postes);
+
+  if (!presentation) return null;
+
+  return (
+    <Grid container spacing={2} alignItems="center">
+      
+      {/* Identité */}
+      <Grid item size={{ xs: 12, md: 7 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          {presentation.photo && (
+            <Avatar
+              src={presentation.photo}
+              alt={`${presentation.prenom} ${presentation.nom}`}
+              variant="rounded"
+              sx={{ width: 90, height: 90, mr: 2.5, boxShadow: 2 }}
+            />
+          )}
+          <Box>
+            <Typography variant="h5" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+              {presentation.prenom} {presentation.nom}
+            </Typography>
+            <Link 
+              href={`mailto:${presentation.email}`} 
+              variant="body2" 
+              underline="hover" 
+              sx={{ color: 'primary.main', mt: 0.5, display: 'block' }}
+            >
+              {presentation.email}
+            </Link>
+          </Box>
         </Box>
-      </Box>
-    </Grid>
+      </Grid>
 
-    {/* Partie Droite : Postes ciblés */}
-    <Grid item size={{ xs: 12, md: 5 }} >
-      <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-        Postes ciblés
-      </Typography>
-      <List dense> {/* 'dense' réduit l'espacement de la liste */}
-        {postes.map((poste) => (
-          <ListItem key={poste.id} sx={{ p: 0 }}>
-            <ListItemText primary={poste.nom} />
-          </ListItem>
-        ))}
-      </List>
-    </Grid>
+      {/* Postes Ciblés */}
+      <Grid item size={{ xs: 12, md: 5 }}>
+        {postes.length > 0 && (
+          <Box sx={{ pl: { md: 2 }, borderLeft: { md: '1px solid rgba(0,0,0,0.08)' } }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: 'text.secondary', textTransform: 'uppercase', fontSize: '0.75rem' }}>
+              Recherche Actuelle
+            </Typography>
+            <List dense disablePadding>
+              {postes.map((poste) => (
+                <ListItem key={poste.id} sx={{ px: 0, py: 0.2 }}>
+                  <ListItemText 
+                    primary={poste.nom} 
+                    primaryTypographyProps={{ variant: 'body2', fontWeight: 500 }} 
+                  />
+                </ListItem>
+              ))}
+            </List>
+          </Box>
+        )}
+      </Grid>
 
-  </Grid>
-);
+    </Grid>
+  );
+};
 
 export default InfosContact;
