@@ -1,25 +1,81 @@
-# backend/api/tests.py
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
-from .models import ProjetProfessionnel # <-- CORRIGÉ
+from .models import ProjetProfessionnel, DetailEvenement, ActiviteProfessionnelle
 
-class TestsApi(APITestCase):
+class TestsArchitectureApi(APITestCase):
+    """Tests validant l'architecture des modèles et les réponses API."""
 
     def setUp(self):
-        """Configuration initiale pour les tests : crée des projets."""
-        ProjetProfessionnel.objects.create(titre="Projet Test 1", introduction="Une description.") # <-- CORRIGÉ
-        ProjetProfessionnel.objects.create(titre="Projet Test 2", introduction="Une autre description.") # <-- CORRIGÉ
+        """Configuration initiale des données de test."""
+        
+        # Création d'un projet professionnel
+        self.projet_pro = ProjetProfessionnel.objects.create(
+            titre="Projet Test Generic",
+            introduction="Une description de test.",
+            date_debut="2024-01-01"
+        )
+        
+        # Ajout d'un détail via la relation générique
+        self.detail_projet = DetailEvenement.objects.create(
+            content_object=self.projet_pro,
+            sous_titre="Phase de conception",
+            descriptions="- Analyse des besoins\n- Maquettage"
+        )
 
-    def test_obtenir_liste_projets(self):
-        """Vérifie que l'API retourne correctement la liste des projets."""
-        # Préparation
-        url_api = reverse('projet-pro-list') # <-- CORRIGÉ (basename 'projet-pro' de urls.py)
+        # Création d'une activité pro
+        self.activite = ActiviteProfessionnelle.objects.create(
+            poste="Développeur Fullstack",
+            date_debut="2023-01-01"
+        )
+
+        # Ajout d'un détail à l'activité (polymorphisme)
+        self.detail_activite = DetailEvenement.objects.create(
+            content_object=self.activite,
+            sous_titre="Responsabilités",
+            descriptions="- Développement backend\n- Tests unitaires"
+        )
+
+    def test_generic_relations_models(self):
+        """Vérifie que les relations génériques fonctionnent au niveau ORM."""
+        self.assertEqual(self.projet_pro.details.count(), 1)
+        self.assertEqual(self.projet_pro.details.first().sous_titre, "Phase de conception")
         
-        # Action
-        reponse = self.client.get(url_api, format='json')
+        self.assertEqual(self.activite.details.count(), 1)
+        self.assertEqual(self.activite.details.first().sous_titre, "Responsabilités")
+
+    def test_api_projet_structure(self):
+        """Vérifie que l'API Projet expose correctement les détails imbriqués."""
+        url = reverse('projet-pro-list')
+        reponse = self.client.get(url, format='json')
         
-        # Assertions
         self.assertEqual(reponse.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(reponse.data), 2)
-        self.assertEqual(reponse.data[0]['titre'], 'Projet Test 1')
+        data = reponse.data
+        
+        # Vérifie qu'on a bien un projet
+        self.assertTrue(len(data) > 0)
+        projet_data = data[0]
+        
+        # Vérifie le champ 'travail_effectue' (mappé sur 'details')
+        self.assertIn('travail_effectue', projet_data)
+        self.assertEqual(len(projet_data['travail_effectue']), 1)
+        
+        detail = projet_data['travail_effectue'][0]
+        self.assertEqual(detail['sous_titre'], "Phase de conception")
+        
+        # Vérifie la transformation du texte en liste (fait par le Serializer)
+        self.assertIsInstance(detail['descriptions'], list)
+        self.assertEqual(len(detail['descriptions']), 2)
+        self.assertEqual(detail['descriptions'][0], "- Analyse des besoins")
+
+    def test_api_activite_structure(self):
+        """Vérifie que l'API Activité expose correctement les missions."""
+        url = reverse('activite-list')
+        reponse = self.client.get(url, format='json')
+        
+        self.assertEqual(reponse.status_code, status.HTTP_200_OK)
+        activite_data = reponse.data[0]
+        
+        self.assertIn('missions', activite_data)
+        self.assertEqual(len(activite_data['missions']), 1)
+        self.assertEqual(activite_data['missions'][0]['sous_titre'], "Responsabilités")
