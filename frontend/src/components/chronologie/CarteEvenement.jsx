@@ -56,7 +56,7 @@ function CarteEvenement({ evenement }) {
   }
 
   // AJOUTÉ: Hauteur fixe pour forcer l'uniformité 
-  const HAUTEUR_CARTE = 320; 
+  const HAUTEUR_CARTE = 200; 
 
   return (
     <>
