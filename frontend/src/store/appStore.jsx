@@ -64,8 +64,7 @@ export const useAppStore = create((set, get) => ({
   fetchIntro: async () => {
     set({ chargementIntro: true });
     // Requêtes parallèles pour l'intro
-    const [resPres, resPostes, resDipl, resComp, resSect] = await Promise.all([
-      clientApi.get('/presentations/'),
+const [resPres, resPostes, resDiplomes, resCompetences, resSections] = await Promise.all([
       clientApi.get('/postes/'),
       clientApi.get('/diplomes/'),
       clientApi.get('/competences/'),
