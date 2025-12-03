@@ -60,16 +60,92 @@ export const useAppStore = create((set, get) => ({
       set({ erreur: "Impossible de charger le profil." });
     }
   },
+// frontend/src/store/appStore.jsx
+
+import { create } from 'zustand';
+import axios from 'axios';
+import { TYPES_EVENEMENTS, CATEGORY_LABELS, LABELS } from '../config';
+
+export const clientApi = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api',
+  timeout: 15000,
+});
+
+// Normalisation sécurisée
+const normaliserEvent = (item, type, extraProps = {}) => ({
+  id: `${type.replace(/\s+/g, '')}-${item.id}`,
+  type,
+  titre: item.titre || item.poste || item.mission || 'Sans titre',
+  date_debut: item.date_debut,
+  date_fin: item.date_fin,
+  description: item.introduction || item.description || '',
+  specificites: { ...item, ...extraProps }
+});
+
+export const useAppStore = create((set, get) => ({
+  // --- Données ---
+  presentation: null,
+  postes: [],
+  diplomes: [],
+  competences: [],
+  sectionsCompetences: [],
+  evenementsChronologiques: [], 
+  
+  // --- UI ---
+  typesFiltres: new Set(TYPES_EVENEMENTS),
+  chargementIntro: true,
+  chargementChronologie: true,
+  erreur: null,
+
+  // --- Sélecteurs ---
+  evenementsFiltres: () => {
+    const { evenementsChronologiques, typesFiltres } = get();
+    if (!evenementsChronologiques) return [];
+    if (typesFiltres.size === TYPES_EVENEMENTS.length) return evenementsChronologiques;
+    return evenementsChronologiques.filter(evt => typesFiltres.has(evt.type));
+  },
+
+  basculerFiltreType: (type) => {
+    set((state) => {
+      const nouveaux = new Set(state.typesFiltres);
+      nouveaux.has(type) ? nouveaux.delete(type) : nouveaux.add(type);
+      return { typesFiltres: nouveaux };
+    });
+  },
+
+  // --- Actions Asynchrones ---
+
+  fetchAllData: async () => {
+    const { fetchIntro, fetchTimeline } = get();
+    set({ erreur: null });
+    
+    try {
+      await fetchIntro();
+      // On lance la suite sans attendre (non bloquant)
+      fetchTimeline(); 
+    } catch (e) {
+      console.error("Erreur critique chargement données:", e);
+      set({ erreur: "Impossible de charger le profil. Vérifiez la connexion API." });
+    }
+  },
 
   fetchIntro: async () => {
     set({ chargementIntro: true });
-    // Requêtes parallèles pour l'intro
-const [resPres, resPostes, resDiplomes, resCompetences, resSections] = await Promise.all([
-      clientApi.get('/postes/'),
-      clientApi.get('/diplomes/'),
-      clientApi.get('/competences/'),
-      clientApi.get('/sections-competences/'),
-    ]);
+    try {
+      // Utilisation de noms explicites 'response...' pour éviter toute confusion
+      const [
+        responsePresentation, 
+        responsePostes, 
+        responseDiplomes, 
+        responseCompetences, 
+        responseSections
+      ] = await Promise.all([
+        clientApi.get('/presentations/'),
+        clientApi.get('/postes/'),
+        clientApi.get('/diplomes/'),
+        clientApi.get('/competences/'),
+        clientApi.get('/sections-competences/'),
+      ]);
 
     set({
       presentation: resPres.data[0] || null,

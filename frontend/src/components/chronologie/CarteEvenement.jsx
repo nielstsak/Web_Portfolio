@@ -56,12 +56,12 @@ function CarteEvenement({ evenement }) {
   }
 
   // AJOUTÉ: Hauteur fixe pour forcer l'uniformité 
-  const HAUTEUR_CARTE = 200; 
+  const HAUTEUR_CARTE = 220; 
 
   return (
     <>
       <motion.div
-        whileHover={{ scale: 1.03 }}
+        whileHover={{ scale: 1.1 }}
         transition={{ type: 'spring', stiffness: 300 }}
         style={{ height: '100%' }}
       >
