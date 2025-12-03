@@ -1,80 +1,52 @@
 from rest_framework import viewsets, permissions
 from .models import (
-    Presentation,
-    PosteCible,
-    Diplome,
-    CompetenceTechnologique, SectionCompetence,
-    Formation,
-    ActiviteProfessionnelle,
-    ServiceCivique,
-    ProjetProfessionnel,
-    ProjetEtudiant,
-    ProjetPersonnel,
+    Presentation, PosteCible, Diplome, CompetenceTechnologique, SectionCompetence,
+    Formation, ActiviteProfessionnelle, ServiceCivique, Projet
 )
 from .serializers import (
-    PresentationSerializer,
-    PosteCibleSerializer,
-    DiplomeSerializer,
+    PresentationSerializer, PosteCibleSerializer, DiplomeSerializer,
     CompetenceTechnologiqueSerializer, SectionCompetenceSerializer,
-    FormationSerializer,
-    ActiviteProfessionnelleSerializer,
-    ServiceCiviqueSerializer,
-    ProjetProfessionnelSerializer,
-    ProjetEtudiantSerializer,
-    ProjetPersonnelSerializer,
+    FormationSerializer, ActiviteProfessionnelleSerializer, ServiceCiviqueSerializer,
+    ProjetSerializer
 )
 
-class PresentationViewSet(viewsets.ReadOnlyModelViewSet):
+class BaseReadOnlyViewSet(viewsets.ReadOnlyModelViewSet):
+    """ViewSet de base optimisé pour la lecture seule publique."""
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+class PresentationViewSet(BaseReadOnlyViewSet):
     queryset = Presentation.objects.all()
     serializer_class = PresentationSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
-class PosteCibleViewSet(viewsets.ReadOnlyModelViewSet):
+class PosteCibleViewSet(BaseReadOnlyViewSet):
     queryset = PosteCible.objects.all()
     serializer_class = PosteCibleSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
-class DiplomeViewSet(viewsets.ReadOnlyModelViewSet):
+class DiplomeViewSet(BaseReadOnlyViewSet):
     queryset = Diplome.objects.all()
     serializer_class = DiplomeSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
-class CompetenceTechnologiqueViewSet(viewsets.ReadOnlyModelViewSet):
+class CompetenceTechnologiqueViewSet(BaseReadOnlyViewSet):
     queryset = CompetenceTechnologique.objects.all()
     serializer_class = CompetenceTechnologiqueSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
-class SectionCompetenceViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = SectionCompetence.objects.all()
+class SectionCompetenceViewSet(BaseReadOnlyViewSet):
+    queryset = SectionCompetence.objects.prefetch_related('competences').all()
     serializer_class = SectionCompetenceSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
-class FormationViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Formation.objects.all()
+class FormationViewSet(BaseReadOnlyViewSet):
+    queryset = Formation.objects.prefetch_related('details').all()
     serializer_class = FormationSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
-class ActiviteProfessionnelleViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = ActiviteProfessionnelle.objects.all()
+class ActiviteProfessionnelleViewSet(BaseReadOnlyViewSet):
+    queryset = ActiviteProfessionnelle.objects.prefetch_related('details').all()
     serializer_class = ActiviteProfessionnelleSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
-class ServiceCiviqueViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = ServiceCivique.objects.all()
+class ServiceCiviqueViewSet(BaseReadOnlyViewSet):
+    queryset = ServiceCivique.objects.prefetch_related('details').all()
     serializer_class = ServiceCiviqueSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
-class ProjetProfessionnelViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = ProjetProfessionnel.objects.all()
-    serializer_class = ProjetProfessionnelSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-
-class ProjetEtudiantViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = ProjetEtudiant.objects.all()
-    serializer_class = ProjetEtudiantSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-
-class ProjetPersonnelViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = ProjetPersonnel.objects.all()
-    serializer_class = ProjetPersonnelSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+class ProjetViewSet(BaseReadOnlyViewSet):
+    queryset = Projet.objects.prefetch_related('details', 'media_photos', 'technologies').all()
+    serializer_class = ProjetSerializer
+    filterset_fields = ['categorie'] 
