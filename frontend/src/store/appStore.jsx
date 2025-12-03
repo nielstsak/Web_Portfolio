@@ -2,68 +2,6 @@
 
 import { create } from 'zustand';
 import axios from 'axios';
-import { TYPES_EVENEMENTS, CATEGORY_LABELS } from '../config';
-
-export const clientApi = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api',
-  timeout: 10000,
-});
-
-// Normalisation générique
-const normaliserEvent = (item, type, extraProps = {}) => ({
-  id: `${type}-${item.id}`,
-  type,
-  titre: item.titre || item.poste || item.mission,
-  date_debut: item.date_debut,
-  date_fin: item.date_fin,
-  description: item.introduction || item.description || '',
-  specificites: { ...item, ...extraProps }
-});
-
-export const useAppStore = create((set, get) => ({
-  // Data
-  presentation: null,
-  postes: [],
-  diplomes: [],
-  competences: [],
-  sectionsCompetences: [],
-  evenementsChronologiques: [], 
-  
-  // UI
-  typesFiltres: new Set(TYPES_EVENEMENTS),
-  chargementIntro: true,
-  chargementChronologie: true,
-  erreur: null,
-
-  evenementsFiltres: () => {
-    const { evenementsChronologiques, typesFiltres } = get();
-    if (typesFiltres.size === TYPES_EVENEMENTS.length) return evenementsChronologiques;
-    return evenementsChronologiques.filter(evt => typesFiltres.has(evt.type));
-  },
-
-  basculerFiltreType: (type) => {
-    set((state) => {
-      const nouveaux = new Set(state.typesFiltres);
-      nouveaux.has(type) ? nouveaux.delete(type) : nouveaux.add(type);
-      return { typesFiltres: nouveaux };
-    });
-  },
-
-  fetchAllData: async () => {
-    const { fetchIntro, fetchTimeline } = get();
-    set({ erreur: null });
-    try {
-      await fetchIntro();
-      fetchTimeline(); 
-    } catch (e) {
-      console.error(e);
-      set({ erreur: "Impossible de charger le profil." });
-    }
-  },
-// frontend/src/store/appStore.jsx
-
-import { create } from 'zustand';
-import axios from 'axios';
 import { TYPES_EVENEMENTS, CATEGORY_LABELS, LABELS } from '../config';
 
 export const clientApi = axios.create({
@@ -147,20 +85,30 @@ export const useAppStore = create((set, get) => ({
         clientApi.get('/sections-competences/'),
       ]);
 
-    set({
-      presentation: resPres.data[0] || null,
-      postes: resPostes.data,
-      diplomes: resDiplomes.data,
-      competences: resComp.data,
-      sectionsCompetences: resSect.data,
-      chargementIntro: false,
-    });
+      set({
+        presentation: responsePresentation.data[0] || null,
+        postes: responsePostes.data,
+        diplomes: responseDiplomes.data,
+        competences: responseCompetences.data,
+        sectionsCompetences: responseSections.data,
+        chargementIntro: false,
+      });
+    } catch (error) {
+      console.error("Erreur fetchIntro:", error);
+      set({ chargementIntro: false, erreur: "Erreur lors du chargement de l'introduction." });
+      throw error; // Relance l'erreur pour arrêter fetchAllData
+    }
   },
 
   fetchTimeline: async () => {
     set({ chargementChronologie: true });
     try {
-      const [resForm, resAct, resServ, resProjets] = await Promise.all([
+      const [
+        responseFormations, 
+        responseActivites, 
+        responseServices, 
+        responseProjets
+      ] = await Promise.all([
         clientApi.get('/formations/'),
         clientApi.get('/activites-professionnelles/'),
         clientApi.get('/services-civiques/'),
@@ -168,21 +116,22 @@ export const useAppStore = create((set, get) => ({
       ]);
 
       const events = [
-        ...resForm.data.map(i => normaliserEvent(i, 'Formation')),
-        ...resAct.data.map(i => normaliserEvent(i, 'Activité rémunératrice', { poste: i.poste })),
-        ...resServ.data.map(i => normaliserEvent(i, 'Service civique', { mission: i.mission })),
-        ...resProjets.data.map(p => {
-            // Mapping de la catégorie backend vers le libellé frontend
-            const typeLabel = CATEGORY_LABELS[p.categorie] || 'Projets Personnels';
+        ...responseFormations.data.map(i => normaliserEvent(i, LABELS.FORMATION)),
+        ...responseActivites.data.map(i => normaliserEvent(i, LABELS.ACTIVITE, { poste: i.poste })),
+        ...responseServices.data.map(i => normaliserEvent(i, LABELS.SERVICE, { mission: i.mission })),
+        ...responseProjets.data.map(p => {
+            const typeLabel = CATEGORY_LABELS[p.categorie] || LABELS.PRO_PERSO;
             return normaliserEvent(p, typeLabel);
         })
       ];
 
+      // Tri descendant par date
       events.sort((a, b) => new Date(b.date_debut) - new Date(a.date_debut));
 
       set({ evenementsChronologiques: events, chargementChronologie: false });
     } catch (e) {
-      console.warn("Erreur timeline:", e);
+      console.warn("Erreur chargement timeline:", e);
+      set({ chargementChronologie: false, evenementsChronologiques: [] });
     }
   },
 }));
