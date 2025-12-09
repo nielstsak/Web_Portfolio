@@ -5,15 +5,9 @@ import { AppBar, Toolbar, Typography, Box, Button, Container } from '@mui/materi
 /**
  * Barre de navigation principale.
  * Gère la navigation vers les ancres logiques définies dans LandingPage.
- * @param {{ onNaviguer: function, sectionActive: string }} props
  */
-function Navbar({ onNaviguer, sectionActive }) {
+function Navbar() {
   
-  const gererClic = (cible) => (e) => {
-    e.preventDefault();
-    if (onNaviguer) onNaviguer(cible);
-  };
-
   return (
     <AppBar
       position="sticky"
@@ -31,8 +25,7 @@ function Navbar({ onNaviguer, sectionActive }) {
           <Typography
             variant="h6"
             component="a"
-            href="#"
-            onClick={gererClic('introduction')}
+            href="#introduction"
             sx={{
               flexGrow: 1,
               color: 'text.primary',
@@ -47,10 +40,11 @@ function Navbar({ onNaviguer, sectionActive }) {
           {/* Menu de Navigation */}
           <Box>
             <Button
-              onClick={gererClic('introduction')}
+              component="a"
+              href="#introduction"
               sx={{
-                color: sectionActive === 'introduction' ? 'primary.main' : 'text.secondary',
-                fontWeight: sectionActive === 'introduction' ? 700 : 400,
+                color: 'text.secondary',
+                fontWeight: 400,
                 '&:hover': { color: 'primary.dark' },
               }}
             >
@@ -59,10 +53,11 @@ function Navbar({ onNaviguer, sectionActive }) {
             
             {/* Correction: La cible est maintenant 'chronologie' pour correspondre à LandingPage */}
             <Button
-              onClick={gererClic('chronologie')}
+              component="a"
+              href="#chronologie"
               sx={{
-                color: sectionActive === 'chronologie' ? 'primary.main' : 'text.secondary',
-                fontWeight: sectionActive === 'chronologie' ? 700 : 400,
+                color: 'text.secondary',
+                fontWeight: 400,
                 '&:hover': { color: 'primary.dark' },
               }}
             >
