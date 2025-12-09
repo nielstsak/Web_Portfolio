@@ -87,7 +87,7 @@ function CarteEvenement({ evenement }) {
           {mediaSource && (
             <CardMedia
               component={mediaType}
-              height="160"
+              height="120"
               // 'image' est utilisé par le composant img, 'src' par video
               image={mediaType === 'img' ? mediaSource : undefined}
               src={mediaType === 'video' ? mediaSource : undefined}
