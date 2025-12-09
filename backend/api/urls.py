@@ -16,7 +16,6 @@ router.register(r'sections-competences', SectionCompetenceViewSet)
 router.register(r'formations', FormationViewSet)
 router.register(r'activites-professionnelles', ActiviteProfessionnelleViewSet)
 router.register(r'services-civiques', ServiceCiviqueViewSet)
-# Route unifiée
 router.register(r'projets', ProjetViewSet)
 
 urlpatterns = [

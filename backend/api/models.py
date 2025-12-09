@@ -153,7 +153,12 @@ class Projet(BaseEvenement):
         blank=True,
         related_name="projets"
     )
-    media_video = CloudinaryField('video', folder='projets_videos', null=True, blank=True)
+    media_video = models.FileField(
+        upload_to='projets_videos', 
+        null=True, 
+        blank=True,
+        verbose_name="Vidéo (MP4, WebM)"
+    )
     url_code_source = models.URLField(max_length=500, blank=True, null=True)
 
     class Meta(BaseEvenement.Meta):
