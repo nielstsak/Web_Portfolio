@@ -152,14 +152,14 @@ class Projet(BaseEvenement):
         CompetenceTechnologique,
         blank=True,
         related_name="projets"
-    )
-    media_video = models.FileField(
-        upload_to='projets_videos', 
-        null=True, 
-        blank=True,
-        verbose_name="Vidéo (MP4, WebM)"
-    )
-    url_code_source = models.URLField(max_length=500, blank=True, null=True)
+        )
+    media_video = CloudinaryField(
+            resource_type='video', 
+            folder='projets_videos', 
+            null=True, blank=True, 
+            help_text="Vidéo unique de démonstration"
+        )
+    de_source = models.URLField(max_length=500, blank=True, null=True)
 
     class Meta(BaseEvenement.Meta):
         verbose_name = "Projet"
