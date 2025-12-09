@@ -19,14 +19,12 @@ const variantsConteneur = {
  * Section d'introduction (Haut de page).
  * Orchestre l'affichage des sous-composants Contact et Compétences.
  */
-function Introduction({ estVisible }) {
+function Introduction() {
   // Consommation directe des états de chargement/erreur
   const presentation = useAppStore((state) => state.presentation);
   const chargement = useAppStore((state) => state.chargementIntro);
   const erreur = useAppStore((state) => state.erreur);
 
-  if (!estVisible) return null; 
-  
   if (chargement) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>

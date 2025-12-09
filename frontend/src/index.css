@@ -28,6 +28,7 @@ body, html {
   min-height: 100vh; /* La page prend au moins toute la hauteur de la fenêtre */
   overflow-y: auto; /* Autorise le défilement vertical si nécessaire */
   overflow-x: hidden; /* Empêche le défilement horizontal */
+  scroll-behavior: smooth; /* Active le défilement fluide natif */
 }
 
 /* AJOUTÉ: Classe pour bloquer le défilement et compenser la barre de défilement (Obj. 3) */
@@ -37,6 +38,10 @@ body.scroll-lock {
   padding-right: 15px; 
 }
 
+/* Compensation pour la Navbar Sticky lors de la navigation par ancre */
+#introduction, #chronologie {
+  scroll-margin-top: 80px;
+}
 
 /* Conteneur principal où l'application React est montée. */
 #root {
