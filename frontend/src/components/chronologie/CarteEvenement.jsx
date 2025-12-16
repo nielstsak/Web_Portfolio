@@ -2,11 +2,10 @@
 
 import { useState } from 'react';
 import { Paper, Typography, Box, CardMedia, IconButton } from '@mui/material'; 
-import MoreHorizIcon from '@mui/icons-material/MoreHoriz'; // AJOUTÉ: Icône pour indiquer le détail 
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { motion } from 'framer-motion';
 import ModaleEvenement from './ModaleEvenement'; 
 
-// Mappage des couleurs (HEX pour la bordure)
 const COULEURS_TYPES = {
   'Formation': '#0288d1',
   'Activité rémunératrice': '#ed6c02',
@@ -33,7 +32,6 @@ function CarteEvenement({ evenement }) {
 
   const couleur = COULEURS_TYPES[evenement.type] || '#bdbdbd'; 
 
-  // --- LOGIQUE DE SÉLECTION DU MÉDIA (inchangée) ---
   const isProjet = evenement.type.startsWith('Projets');
   const specificites = evenement.specificites || {};
   const photos = specificites.media_photos;
@@ -43,25 +41,20 @@ function CarteEvenement({ evenement }) {
   let mediaType = null;
 
   if (isProjet) {
-    // Priorité 1 : Première photo disponible
     if (photos && photos.length > 0) {
       mediaSource = photos[0].image;
       mediaType = 'img';
     } 
-    // Priorité 2 : Vidéo (affichée comme image statique)
     else if (video) {
       mediaSource = video;
       mediaType = 'video';
     }
   }
 
-  // AJOUTÉ: Hauteur fixe pour forcer l'uniformité 
-  const HAUTEUR_CARTE = 220; 
-
   return (
     <>
       <motion.div
-        whileHover={{ scale: 1.1 }}
+        whileHover={{ scale: 1.02 }}
         transition={{ type: 'spring', stiffness: 300 }}
         style={{ height: '100%' }}
       >
@@ -69,39 +62,21 @@ function CarteEvenement({ evenement }) {
           elevation={2}
           onClick={() => setModaleOuverte(true)}
           sx={{
-            height: HAUTEUR_CARTE, // HAUTEUR FIXE 
+            height: '100%',
+            minHeight: 280,
             cursor: 'pointer',
             borderRadius: 2,
             borderLeft: `5px solid ${couleur}`,
             overflow: 'hidden',
             display: 'flex',
             flexDirection: 'column',
-            p: 0,
             transition: 'box-shadow 0.3s ease',
             '&:hover': {
               boxShadow: 6,
             },
           }}
         >
-          {/* --- AFFICHAGE DU MÉDIA --- */}
-          {mediaSource && (
-            <CardMedia
-              component={mediaType}
-              height="120"
-              // 'image' est utilisé par le composant img, 'src' par video
-              image={mediaType === 'img' ? mediaSource : undefined}
-              src={mediaType === 'video' ? mediaSource : undefined}
-              alt={mediaType === 'img' ? `Aperçu ${evenement.titre}` : undefined}
-              sx={{ objectFit: 'cover' }}
-              // Paramètres pour que la vidéo soit traiter comme  une image (1ère frame)
-              controls={false}
-              muted
-              playsInline
-              preload="metadata" 
-            />
-          )}
-          
-          <Box sx={{ p: 2.5, display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
+          <Box sx={{ p: 2.5, pb: 1, display: 'flex', flexDirection: 'column' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
               <Typography variant="caption" sx={{ color: couleur, fontWeight: 600 }}>
                 {evenement.type}
@@ -111,18 +86,36 @@ function CarteEvenement({ evenement }) {
               </Typography>
             </Box>
             
-            <Typography variant="h6" component="h3" sx={{ fontWeight: 600, mb: 1 }}>
+            <Typography variant="h6" component="h3" sx={{ fontWeight: 600, lineHeight: 1.3 }}>
               {evenement.titre}
             </Typography>
-            
-            {/* MODIFIÉ: Remplacement de la description par un indicateur visuel  */}
-            <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end' }}>
-              <IconButton size="small" sx={{ color: couleur }} aria-label="Voir les détails">
-                <MoreHorizIcon />
-              </IconButton>
-            </Box>
-            {/* FIN MODIFICATION */}
+          </Box>
 
+          <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            {mediaSource ? (
+              <CardMedia
+                component={mediaType}
+                height="180"
+                image={mediaType === 'img' ? mediaSource : undefined}
+                src={mediaType === 'video' ? mediaSource : undefined}
+                alt={mediaType === 'img' ? `Aperçu ${evenement.titre}` : undefined}
+                sx={{ objectFit: 'cover', width: '100%' }}
+                controls={false}
+                muted
+                playsInline
+                preload="metadata" 
+              />
+            ) : (
+              <Box sx={{ height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'rgba(0,0,0,0.03)' }}>
+                 {/* Espace vide stylisé si pas de média */}
+              </Box>
+            )}
+          </Box>
+
+          <Box sx={{ p: 1, pr: 2, display: 'flex', justifyContent: 'flex-end' }}>
+            <IconButton size="small" sx={{ color: couleur }} aria-label="Voir les détails">
+              <MoreHorizIcon />
+            </IconButton>
           </Box>
         </Paper>
       </motion.div>
