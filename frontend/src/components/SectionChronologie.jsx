@@ -2,7 +2,6 @@
 
 import { Container, Typography, Box, Divider, Paper } from '@mui/material';
 import { motion } from 'framer-motion';
-// Imports décommentés
 import ControlesFiltrage from './chronologie/ControlesFiltrage';
 import GrilleEvenements from './chronologie/GrilleEvenements';
 import CalendrierActivite from './chronologie/CalendrierActivite';
@@ -42,20 +41,33 @@ function SectionChronologie({ evenementsFiltres }) {
       <motion.div 
         variants={variantsConteneur} 
         initial="hidden" 
-        animate="visible" 
+        whileInView="visible"
+        viewport={{ once: true, margin: "-100px" }}
         style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, minHeight: 0 }}
       >
         
-        <motion.div variants={variantsElement}>
-          <Typography variant="h3" component="h2" sx={{ mb: 3, textAlign: 'center', fontWeight: 'bold' }}>
-            Chronologie
-          </Typography>
-        </motion.div>
+        {/* En-tête sur fond Paper (Titre + Filtres) */}
+        <Paper 
+          elevation={1} 
+          sx={{ 
+            p: 4, 
+            mb: 4, 
+            borderRadius: 2,
+            backgroundColor: 'rgba(255, 255, 255, 0.5)',
+            backdropFilter: 'blur(10px)'
+          }}
+        >
+          <motion.div variants={variantsElement}>
+            <Typography variant="h3" component="h2" sx={{ mb: 3, textAlign: 'center', fontWeight: 'bold' }}>
+              Chronologie
+            </Typography>
+          </motion.div>
 
-        {/* Filtres (Tâche 12) */}
-        <motion.div variants={variantsElement} style={{ flexShrink: 0 }}>
-          <ControlesFiltrage />
-        </motion.div>
+          {/* Filtres (Tâche 12) */}
+          <motion.div variants={variantsElement}>
+            <ControlesFiltrage />
+          </motion.div>
+        </Paper>
         
         {/* Grille des événements (Tâche 13) */}
         {/* 'flexGrow: 1' et 'overflowY: auto' sont cruciaux */}
