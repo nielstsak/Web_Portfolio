@@ -1,3 +1,5 @@
+// frontend/src/store/appStore.jsx
+
 import { create } from 'zustand';
 import axios from 'axios';
 import { TYPES_EVENEMENTS, CATEGORY_LABELS, LABELS } from '../config';
@@ -23,28 +25,51 @@ export const useAppStore = create((set, get) => ({
   diplomes: [],
   competences: [],
   sectionsCompetences: [],
-  evenementsChronologiques: [], 
+  evenementsChronologiques: [],
+  
+  // Variables "Cache" pour éviter les boucles de rendu infinies
+  _cacheEvenementsFiltres: [],
+  _cacheCategories: ['Tous'],
   
   filtreActif: 'Tous',
   chargementIntro: true,
   chargementChronologie: true,
   erreur: null,
 
-  setFiltre: (nouveauFiltre) => set({ filtreActif: nouveauFiltre }),
-
-  evenementsFiltres: () => {
+  // Action interne pour recalculer les données dérivées
+  // Cela garantit que les références des tableaux ne changent que si les données changent vraiment.
+  calculerDerives: () => {
     const { evenementsChronologiques, filtreActif } = get();
-    if (!evenementsChronologiques) return [];
-    if (filtreActif === 'Tous') return evenementsChronologiques;
-    return evenementsChronologiques.filter(evt => evt.type === filtreActif);
+    
+    // 1. Calcul des catégories
+    let categories = ['Tous'];
+    if (evenementsChronologiques && evenementsChronologiques.length > 0) {
+      const types = evenementsChronologiques.map(e => e.type).filter(Boolean);
+      categories = ['Tous', ...[...new Set(types)].sort()];
+    }
+
+    // 2. Calcul du filtrage
+    let filtres = [];
+    if (evenementsChronologiques) {
+      if (filtreActif === 'Tous') {
+        filtres = evenementsChronologiques;
+      } else {
+        filtres = evenementsChronologiques.filter(evt => evt.type === filtreActif);
+      }
+    }
+
+    // Mise à jour du cache dans le store
+    set({ _cacheCategories: categories, _cacheEvenementsFiltres: filtres });
   },
 
-  listeCategories: () => {
-    const { evenementsChronologiques } = get();
-    if (!evenementsChronologiques || evenementsChronologiques.length === 0) return ['Tous'];
-    const types = evenementsChronologiques.map(e => e.type).filter(Boolean);
-    return ['Tous', ...[...new Set(types)].sort()];
+  setFiltre: (nouveauFiltre) => {
+    set({ filtreActif: nouveauFiltre });
+    get().calculerDerives(); // Recalcule le cache après changement de filtre
   },
+
+  // Les getters retournent maintenant les valeurs en cache (stables)
+  evenementsFiltres: () => get()._cacheEvenementsFiltres,
+  listeCategories: () => get()._cacheCategories,
 
   fetchAllData: async () => {
     const { fetchIntro, fetchTimeline } = get();
@@ -82,7 +107,6 @@ export const useAppStore = create((set, get) => ({
         diplomes: responseDiplomes.data,
         competences: responseCompetences.data,
         sectionsCompetences: responseSections.data,
-        sectionsCompetences: responseSections.data,
         chargementIntro: false,
       });
     } catch (error) {
@@ -119,10 +143,14 @@ export const useAppStore = create((set, get) => ({
 
       events.sort((a, b) => new Date(b.date_debut) - new Date(a.date_debut));
 
+      // Mise à jour des données brutes ET appel du calcul des dérivés
       set({ evenementsChronologiques: events, chargementChronologie: false });
+      get().calculerDerives();
+
     } catch (e) {
       console.warn("Erreur chargement timeline:", e);
       set({ chargementChronologie: false, evenementsChronologiques: [] });
+      get().calculerDerives(); // S'assure que le cache est vide mais propre
     }
   },
 }));
