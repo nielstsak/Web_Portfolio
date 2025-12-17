@@ -1,5 +1,3 @@
-// frontend/src/store/appStore.jsx
-
 import { create } from 'zustand';
 import axios from 'axios';
 import { TYPES_EVENEMENTS, CATEGORY_LABELS, LABELS } from '../config';
@@ -9,7 +7,6 @@ export const clientApi = axios.create({
   timeout: 15000,
 });
 
-// Normalisation sécurisée
 const normaliserEvent = (item, type, extraProps = {}) => ({
   id: `${type.replace(/\s+/g, '')}-${item.id}`,
   type,
@@ -21,7 +18,6 @@ const normaliserEvent = (item, type, extraProps = {}) => ({
 });
 
 export const useAppStore = create((set, get) => ({
-  // --- Données ---
   presentation: null,
   postes: [],
   diplomes: [],
@@ -29,29 +25,26 @@ export const useAppStore = create((set, get) => ({
   sectionsCompetences: [],
   evenementsChronologiques: [], 
   
-  // --- UI ---
-  typesFiltres: new Set(TYPES_EVENEMENTS),
+  filtreActif: 'Tous',
   chargementIntro: true,
   chargementChronologie: true,
   erreur: null,
 
-  // --- Sélecteurs ---
+  setFiltre: (nouveauFiltre) => set({ filtreActif: nouveauFiltre }),
+
   evenementsFiltres: () => {
-    const { evenementsChronologiques, typesFiltres } = get();
+    const { evenementsChronologiques, filtreActif } = get();
     if (!evenementsChronologiques) return [];
-    if (typesFiltres.size === TYPES_EVENEMENTS.length) return evenementsChronologiques;
-    return evenementsChronologiques.filter(evt => typesFiltres.has(evt.type));
+    if (filtreActif === 'Tous') return evenementsChronologiques;
+    return evenementsChronologiques.filter(evt => evt.type === filtreActif);
   },
 
-  basculerFiltreType: (type) => {
-    set((state) => {
-      const nouveaux = new Set(state.typesFiltres);
-      nouveaux.has(type) ? nouveaux.delete(type) : nouveaux.add(type);
-      return { typesFiltres: nouveaux };
-    });
+  listeCategories: () => {
+    const { evenementsChronologiques } = get();
+    if (!evenementsChronologiques || evenementsChronologiques.length === 0) return ['Tous'];
+    const types = evenementsChronologiques.map(e => e.type).filter(Boolean);
+    return ['Tous', ...[...new Set(types)].sort()];
   },
-
-  // --- Actions Asynchrones ---
 
   fetchAllData: async () => {
     const { fetchIntro, fetchTimeline } = get();
@@ -59,7 +52,6 @@ export const useAppStore = create((set, get) => ({
     
     try {
       await fetchIntro();
-      // On lance la suite sans attendre (non bloquant)
       fetchTimeline(); 
     } catch (e) {
       console.error("Erreur critique chargement données:", e);
@@ -70,7 +62,6 @@ export const useAppStore = create((set, get) => ({
   fetchIntro: async () => {
     set({ chargementIntro: true });
     try {
-      // Utilisation de noms explicites 'response...' pour éviter toute confusion
       const [
         responsePresentation, 
         responsePostes, 
@@ -91,12 +82,13 @@ export const useAppStore = create((set, get) => ({
         diplomes: responseDiplomes.data,
         competences: responseCompetences.data,
         sectionsCompetences: responseSections.data,
+        sectionsCompetences: responseSections.data,
         chargementIntro: false,
       });
     } catch (error) {
       console.error("Erreur fetchIntro:", error);
       set({ chargementIntro: false, erreur: "Erreur lors du chargement de l'introduction." });
-      throw error; // Relance l'erreur pour arrêter fetchAllData
+      throw error; 
     }
   },
 
@@ -125,7 +117,6 @@ export const useAppStore = create((set, get) => ({
         })
       ];
 
-      // Tri descendant par date
       events.sort((a, b) => new Date(b.date_debut) - new Date(a.date_debut));
 
       set({ evenementsChronologiques: events, chargementChronologie: false });
