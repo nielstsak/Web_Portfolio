@@ -34,48 +34,47 @@ function CarteEvenement({ evenement }) {
   return (
     <>
       <motion.div
-        whileHover={{ scale: 1.02 }}
-        transition={{ type: 'spring', stiffness: 300 }}
+        whileHover={{ scale: 1.03 }}
+        transition={{ type: 'spring', stiffness: 400, damping: 17 }}
         style={{ height: '100%' }}
       >
         <Paper
-          elevation={1}
+          elevation={2}
           onClick={() => setModaleOuverte(true)}
           sx={{
             height: '100%',
-            minHeight: 130,
+            minHeight: 140,
             cursor: 'pointer',
-            borderRadius: 2,
-            borderLeft: `4px solid ${couleur}`,
-            backgroundColor: alpha(couleur, 0.12),
+            borderRadius: 3,
+            borderLeft: `5px solid ${couleur}`,
+            background: `linear-gradient(${alpha(couleur, 0.08)}, ${alpha(couleur, 0.08)}), #fff`,
             overflow: 'hidden',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
-            transition: 'box-shadow 0.3s ease, background-color 0.3s ease',
+            transition: 'box-shadow 0.3s ease, transform 0.2s ease',
             '&:hover': {
               boxShadow: 4,
-              backgroundColor: alpha(couleur, 0.2),
             },
           }}
         >
-          <Box sx={{ p: 2, pb: 0, display: 'flex', flexDirection: 'column' }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-              <Typography variant="caption" sx={{ color: couleur, fontWeight: 700, textTransform: 'uppercase', fontSize: '0.7rem' }}>
+          <Box sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
+              <Typography variant="caption" sx={{ color: couleur, fontWeight: 700, textTransform: 'uppercase', fontSize: '0.7rem', letterSpacing: 0.5 }}>
                 {evenement.type}
               </Typography>
-              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem', fontWeight: 500 }}>
                 {formaterPeriode(evenement.date_debut, evenement.date_fin)}
               </Typography>
             </Box>
             
-            <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+            <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 700, lineHeight: 1.3, fontSize: '1rem' }}>
               {evenement.titre}
             </Typography>
           </Box>
 
-          <Box sx={{ p: 1, pr: 2, display: 'flex', justifyContent: 'flex-end' }}>
-            <IconButton size="small" sx={{ color: couleur, opacity: 0.8 }} aria-label="Voir les détails">
+          <Box sx={{ p: 1.5, display: 'flex', justifyContent: 'flex-end', pt: 0 }}>
+            <IconButton size="small" sx={{ color: couleur, backgroundColor: alpha(couleur, 0.1), '&:hover': { backgroundColor: alpha(couleur, 0.2) } }} aria-label="Voir les détails">
               <MoreHorizIcon fontSize="small" />
             </IconButton>
           </Box>
