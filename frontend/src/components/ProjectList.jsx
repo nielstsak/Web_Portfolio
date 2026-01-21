@@ -1,112 +1,178 @@
-// frontend/src/components/ProjectList.jsx
+// [Symbole Commentaire] FICHIER : frontend/src/components/ProjectList.jsx
 
-import { useRef } from 'react';
-import { Box, Card, CardContent, Typography, Chip, IconButton, CardMedia } from '@mui/material';
-import { Masonry } from '@mui/lab'; // Composant Masonry pour une grille décalée
+import { useRef, useCallback } from 'react';
+import { Box, Card, CardContent, Typography, Chip, IconButton, CardMedia, Avatar } from '@mui/material';
+import { Masonry } from '@mui/lab';
 import { motion } from 'framer-motion';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import { LABELS, COULEURS_TYPES_MUI } from '../config';
 
-// Variantes d'animation pour le conteneur de la grille (animation en cascade)
 const variantsConteneur = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.1 }, // Délai entre l'apparition de chaque enfant
+    transition: { staggerChildren: 0.1 },
   },
 };
 
-// Variantes d'animation pour chaque carte de projet.
 const variantsElement = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 30 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.5 },
+    transition: { duration: 0.5, ease: 'easeOut' },
   },
 };
 
 /**
- * Affiche une carte de projet individuelle avec un aperçu vidéo au survol.
- * @param {{ projet: object, onSelectionnerProjet: function }} props
+ * Carte interactive affichant un projet.
+ * Gère la prévisualisation vidéo au survol.
  */
-function CarteProjet({ projet, onSelectionnerProjet }) {
-  const refVideo = useRef(null); // Référence à l'élément <video>
+function CarteProjet({ projet, onSelectionner }) {
+  const refVideo = useRef(null);
 
-  // Lance la lecture de la vidéo au survol de la carte.
-  const gererSurvolEntree = () => {
+  const gererSurvolEntree = useCallback(() => {
     if (refVideo.current) {
-      refVideo.current.play().catch(() => {}); // catch() pour ignorer les erreurs si la lecture est interrompue.
+      refVideo.current.play().catch(() => {}); // Ignorer les erreurs d'autoplay (ex: interaction requise)
     }
-  };
+  }, []);
 
-  // Met la vidéo en pause lorsque le curseur quitte la carte.
-  const gererSurvolSortie = () => {
+  const gererSurvolSortie = useCallback(() => {
     if (refVideo.current) {
       refVideo.current.pause();
+      refVideo.current.currentTime = 0; // Reset pour le prochain survol
     }
-  };
+  }, []);
+
+  // Détermine la couleur du Chip selon la catégorie
+  const couleurChip = COULEURS_TYPES_MUI[projet.type] || 'default';
 
   return (
     <motion.div
       variants={variantsElement}
-      whileHover={{ scale: 1.03 }} // Léger zoom au survol
-      transition={{ type: 'spring', stiffness: 300 }}
-      style={{ cursor: 'pointer' }}
-      onClick={() => onSelectionnerProjet(projet.id)}
-      onMouseEnter={gererSurvolEntree}
-      onMouseLeave={gererSurvolSortie}
+      whileHover={{ y: -8 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
     >
-      <Card sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        borderRadius: 2,
-        boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-        border: '1px solid transparent',
-        transition: 'border-color 0.3s ease, box-shadow 0.3s ease',
-        '&:hover': {
-          borderColor: 'primary.main',
-          boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-        },
-        position: 'relative',
-        overflow: 'hidden',
-      }}>
-        {/* Média : Vidéo du projet */}
-        {projet.video && (
-          <CardMedia
-            ref={refVideo}
-            component="video"
-            src={projet.video}
-            loop
-            muted
-            playsInline // Nécessaire pour l'autoplay sur mobile
-            sx={{ height: 200, objectFit: 'cover' }}
+      <Card
+        onClick={() => onSelectionner(projet.apiId)} // Utilise l'ID numérique pour l'URL
+        onMouseEnter={gererSurvolEntree}
+        onMouseLeave={gererSurvolSortie}
+        sx={{
+          cursor: 'pointer',
+          borderRadius: 3,
+          overflow: 'hidden',
+          position: 'relative',
+          border: '1px solid rgba(0,0,0,0.08)',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+          transition: 'border-color 0.3s, box-shadow 0.3s',
+          '&:hover': {
+            borderColor: 'primary.main',
+            boxShadow: '0 12px 40px rgba(0,0,0,0.12)',
+          }
+        }}
+      >
+        <Box sx={{ position: 'relative', height: 220, backgroundColor: '#000' }}>
+          {projet.video ? (
+            <CardMedia
+              ref={refVideo}
+              component="video"
+              src={projet.video}
+              muted
+              playsInline
+              loop
+              sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
+          ) : (
+            // Fallback si pas de vidéo : Image ou Placeholder
+            <Box sx={{ 
+              width: '100%', 
+              height: '100%', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)'
+            }}>
+              <Typography variant="h4" sx={{ color: 'white', fontWeight: 700, opacity: 0.8 }}>
+                {projet.titre.charAt(0)}
+              </Typography>
+            </Box>
+          )}
+          
+          {/* Badge Catégorie */}
+          <Chip
+            label={projet.type}
+            color={couleurChip}
+            size="small"
+            sx={{
+              position: 'absolute',
+              top: 12,
+              right: 12,
+              fontWeight: 600,
+              backdropFilter: 'blur(4px)',
+              backgroundColor: 'rgba(255,255,255,0.9)'
+            }}
           />
-        )}
-        {/* Contenu : Titre, description, technologies */}
-        <CardContent>
-          <Typography gutterBottom variant="h5" component="div">
+        </Box>
+
+        <CardContent sx={{ p: 3 }}>
+          <Typography variant="h6" component="h3" sx={{ fontWeight: 700, mb: 1, lineHeight: 1.3 }}>
             {projet.titre}
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2, minHeight: '60px' }}>
-            {projet.description.substring(0, 100)}...
+          
+          <Typography variant="body2" color="text.secondary" sx={{ 
+            mb: 2, 
+            minHeight: '4.5em', // Hauteur fixe pour alignement (3 lignes)
+            display: '-webkit-box',
+            WebkitLineClamp: 3,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden'
+          }}>
+            {projet.description}
           </Typography>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-            {projet.technologies.slice(0, 3).map(tech => ( // Affiche max 3 technos
-              <Chip key={tech.id} label={tech.nom} size="small" />
+
+          {/* Stack Technique (Max 3) */}
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            {projet.technologies.slice(0, 3).map((tech) => (
+              <Chip
+                key={tech.id}
+                label={tech.nom}
+                size="small"
+                variant="outlined"
+                avatar={
+                  tech.logo ? <Avatar src={tech.logo} sx={{ bgcolor: 'transparent' }} /> : null
+                }
+                sx={{ borderRadius: '6px', border: '1px solid rgba(0,0,0,0.1)' }}
+              />
             ))}
+            {projet.technologies.length > 3 && (
+              <Typography variant="caption" sx={{ alignSelf: 'center', color: 'text.secondary' }}>
+                +{projet.technologies.length - 3}
+              </Typography>
+            )}
           </Box>
         </CardContent>
-        
-        {/* Icône fléchée qui apparaît au survol */}
+
+        {/* Bouton d'action flottant au survol */}
         <motion.div
-          initial={{ opacity: 0 }}
-          whileHover={{ opacity: 1 }} // Apparaît seulement au survol de la carte (via propagation)
-          transition={{ duration: 0.3 }}
-          style={{ position: 'absolute', bottom: 16, right: 16 }}
+          initial={{ opacity: 0, scale: 0.8 }}
+          whileHover={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.2 }}
+          style={{
+            position: 'absolute',
+            bottom: 20,
+            right: 20,
+            pointerEvents: 'none' // Laisse le clic passer à la Card
+          }}
         >
-          <IconButton sx={{ backgroundColor: 'primary.main', color: 'white', '&:hover': { backgroundColor: 'primary.dark' } }}>
-            <ArrowForwardIcon />
+          <IconButton 
+            sx={{ 
+              backgroundColor: 'primary.main', 
+              color: 'white',
+              boxShadow: 3,
+              '&:hover': { backgroundColor: 'primary.dark' }
+            }}
+          >
+            <ArrowForwardIcon fontSize="small" />
           </IconButton>
         </motion.div>
       </Card>
@@ -115,19 +181,37 @@ function CarteProjet({ projet, onSelectionnerProjet }) {
 }
 
 /**
- * Affiche une liste de projets sous forme de grille Masonry.
- * @param {{ projets: Array<object>, onSelectionnerProjet: function }} props
+ * Galerie des projets (Étudiant, Perso, Freelance).
+ * Affiche une grille Masonry responsive.
  */
-function ListeProjets({ projets, onSelectionnerProjet }) {
+function ProjectList({ projets, onSelectionnerProjet }) {
+  if (!projets || projets.length === 0) {
+    return null;
+  }
+
   return (
-    <Box sx={{ p: 4, height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-      <Typography variant="h3" component="h2" sx={{ mb: 4, textAlign: 'center' }}>
-        Mes Projets
+    <Box sx={{ width: '100%', py: 8, px: { xs: 2, md: 4 } }}>
+      <Typography 
+        variant="h3" 
+        component="h2" 
+        sx={{ mb: 6, textAlign: 'center', fontWeight: 800, letterSpacing: '-0.5px' }}
+      >
+        Réalisations
       </Typography>
-      <motion.div variants={variantsConteneur} initial="hidden" animate="visible">
-        <Masonry columns={{ xs: 1, sm: 2, md: 3 }} spacing={2} >
+
+      <motion.div
+        variants={variantsConteneur}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-50px" }}
+      >
+        <Masonry columns={{ xs: 1, sm: 2, lg: 3 }} spacing={4}>
           {projets.map((projet) => (
-            <CarteProjet key={projet.id} projet={projet} onSelectionnerProjet={onSelectionnerProjet} />
+            <CarteProjet 
+              key={projet.id} 
+              projet={projet} 
+              onSelectionner={onSelectionnerProjet} 
+            />
           ))}
         </Masonry>
       </motion.div>
@@ -135,4 +219,4 @@ function ListeProjets({ projets, onSelectionnerProjet }) {
   );
 }
 
-export default ListeProjets;
+export default ProjectList;

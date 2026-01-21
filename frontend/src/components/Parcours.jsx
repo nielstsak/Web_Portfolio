@@ -1,109 +1,124 @@
-// frontend/src/components/Parcours.jsx
+// [Symbole Commentaire] FICHIER : frontend/src/components/Parcours.jsx
 
 import { Box, Typography, Paper, Container } from '@mui/material';
 import { Timeline, TimelineItem, TimelineSeparator, TimelineConnector, TimelineContent, TimelineDot, TimelineOppositeContent } from '@mui/lab';
-import SchoolIcon from '@mui/icons-material/School'; // Icône pour la formation
-import WorkIcon from '@mui/icons-material/Work'; // Icône pour l'expérience pro
+import SchoolIcon from '@mui/icons-material/School';
+import WorkIcon from '@mui/icons-material/Work';
+import VolunteerActivismIcon from '@mui/icons-material/VolunteerActivism';
+import ComputerIcon from '@mui/icons-material/Computer';
 import { motion } from 'framer-motion';
+import { LABELS } from '../config';
 
-// Animation pour l'apparition en cascade de chaque élément
+// Animation pour l'apparition en cascade
 const variantsElement = {
-  hidden: { opacity: 0, y: 50 },
-  visible: (i) => ({ // 'i' est l'index de l'élément
+  hidden: { opacity: 0, x: -20 },
+  visible: (i) => ({
     opacity: 1,
-    y: 0,
+    x: 0,
     transition: {
-      delay: i * 0.2, // Délai progressif
-      duration: 0.5,
+      delay: i * 0.1,
+      duration: 0.4,
       ease: 'easeOut',
     },
   }),
 };
 
 /**
- * Convertit une chaîne de date "JJ/MM/AAAA" en un objet Date JavaScript.
- * @param {string} chaineDate La date au format "JJ/MM/AAAA".
- * @returns {Date} L'objet Date correspondant.
+ * Sélectionne l'icône appropriée selon le type d'élément.
  */
-const analyserDate = (chaineDate) => {
-  const elements = chaineDate.split('/');
-  // Les mois en JS sont indexés à partir de 0 (0 = Janvier)
-  return new Date(elements[2], elements[1] - 1, elements[0]);
+const obtenirIcone = (type) => {
+  switch (type) {
+    case LABELS.FORMATION:
+      return <SchoolIcon />;
+    case LABELS.SERVICE:
+      return <VolunteerActivismIcon />;
+    case LABELS.FREELANCE:
+      return <ComputerIcon />;
+    default:
+      return <WorkIcon />;
+  }
 };
 
 /**
- * Affiche le parcours professionnel et académique sous forme de timeline verticale.
- * @param {{ donneesParcours: Array<object> }} props
+ * Composant de présentation du parcours (Formation, Service Civique, Freelance).
+ * Reçoit des données normalisées par le store.
  */
-function Parcours({ donneesParcours }) {
-  if (!donneesParcours || donneesParcours.length === 0) {
+function Parcours({ donnees }) {
+  if (!donnees || donnees.length === 0) {
     return null;
   }
 
-  // Trie les expériences de la plus ancienne à la plus récente pour l'affichage chronologique.
-  const parcoursTrie = [...donneesParcours].sort((a, b) => {
-    // Extrait la date de début (partie avant '⟶')
-    const dateA = analyserDate(a.periode.split('⟶')[0].trim());
-    const dateB = analyserDate(b.periode.split('⟶')[0].trim());
-    return dateA - dateB; // Tri chronologique ascendant
-  });
-
   return (
-    <Container maxWidth="md" sx={{ py: 4, height: '100%', overflowY: 'auto' }}>
-      <Typography variant="h3" component="h2" sx={{ mb: 6, textAlign: 'center', fontWeight: 'bold' }}>
-        Mon Parcours
+    <Container maxWidth="md" sx={{ py: 8 }}>
+      <Typography 
+        variant="h3" 
+        component="h2" 
+        sx={{ mb: 6, textAlign: 'center', fontWeight: 800, letterSpacing: '-0.5px' }}
+      >
+        Parcours
       </Typography>
+      
       <Timeline position="alternate">
-        {parcoursTrie.map((element, index) => (
+        {donnees.map((element, index) => (
           <TimelineItem 
             key={element.id}
             component={motion.div}
-            custom={index} // Passe l'index à l'animation 'visible'
+            custom={index}
             initial="hidden"
-            animate="visible"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-50px" }}
             variants={variantsElement}
           >
-            {/* Colonne de gauche (ou droite) : Période */}
+            {/* Période (Gauche ou Droite selon parité) */}
             <TimelineOppositeContent sx={{ m: 'auto 0' }}>
-              <Paper 
-                elevation={2} 
-                sx={{ p: 1, textAlign: 'center', display: 'inline-block' }}
-              >
-                <Typography variant="body2" color="text.secondary">
-                  {element.periode}
-                </Typography>
-              </Paper>
+              <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                {element.periode}
+              </Typography>
             </TimelineOppositeContent>
 
-            {/* Centre : Point et connecteurs */}
+            {/* Connecteur Central */}
             <TimelineSeparator>
-              <TimelineConnector sx={{ bgcolor: 'primary.main' }} />
+              <TimelineConnector sx={{ bgcolor: 'primary.light', opacity: 0.3 }} />
               <TimelineDot color="primary" variant="outlined">
-                {/* Affiche une icône différente pour formation ou expérience */}
-                {element.poste.toLowerCase().includes('etudiant') || element.poste.toLowerCase().includes('formation') 
-                  ? <SchoolIcon color="primary" /> 
-                  : <WorkIcon color="primary" />}
+                {obtenirIcone(element.type)}
               </TimelineDot>
-              <TimelineConnector sx={{ bgcolor: 'primary.main' }} />
+              <TimelineConnector sx={{ bgcolor: 'primary.light', opacity: 0.3 }} />
             </TimelineSeparator>
 
-            {/* Contenu principal : Carte de l'expérience */}
+            {/* Carte de Contenu */}
             <TimelineContent sx={{ py: '12px', px: 2 }}>
               <Paper 
-                elevation={3} 
+                elevation={1} 
                 sx={{ 
                   p: 2.5,
-                  transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
-                  '&:hover': {
-                    transform: 'translateY(-5px)', // Léger soulèvement au survol
-                    boxShadow: 8
-                  }
+                  borderRadius: 2,
+                  textAlign: 'left',
+                  transition: 'box-shadow 0.3s ease',
+                  '&:hover': { boxShadow: 4 }
                 }}
               >
-                <Typography variant="h6" component="h3" sx={{ fontWeight: 'bold' }}>
-                  {element.poste}
+                <Box sx={{ mb: 1 }}>
+                  <Typography variant="h6" component="h3" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+                    {element.titre}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 600, textTransform: 'uppercase' }}>
+                    {element.type}
+                  </Typography>
+                </Box>
+                
+                {/* Description courte ou détails spécifiques */}
+                <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
+                  {element.description}
                 </Typography>
-                <Typography>{element.description}</Typography>
+
+                {/* Affichage conditionnel des missions pour Freelance/Service */}
+                {element.raw?.missions && element.raw.missions.length > 0 && (
+                  <Box component="ul" sx={{ pl: 2, mt: 1, mb: 0, typography: 'caption', color: 'text.secondary' }}>
+                    {element.raw.missions.slice(0, 3).map((m, i) => (
+                      <li key={i}>{m.sous_titre}</li>
+                    ))}
+                  </Box>
+                )}
               </Paper>
             </TimelineContent>
           </TimelineItem>
