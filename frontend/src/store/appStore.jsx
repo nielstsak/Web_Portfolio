@@ -1,156 +1,125 @@
-// frontend/src/store/appStore.jsx
+// [Symbole Commentaire] FICHIER : frontend/src/store/appStore.jsx
 
 import { create } from 'zustand';
 import axios from 'axios';
-import { TYPES_EVENEMENTS, CATEGORY_LABELS, LABELS } from '../config';
+import { LABELS, CATEGORY_LABELS } from '../config';
 
+// Instance Axios configurée pour l'API Django
 export const clientApi = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api',
   timeout: 15000,
 });
 
-const normaliserEvent = (item, type, extraProps = {}) => ({
-  id: `${type.replace(/\s+/g, '')}-${item.id}`,
-  type,
-  titre: item.titre || item.poste || item.mission || 'Sans titre',
-  date_debut: item.date_debut,
-  date_fin: item.date_fin,
-  description: item.introduction || item.description || '',
-  specificites: { ...item, ...extraProps }
-});
+/**
+ * Normalise les objets API hétérogènes en une structure unique pour l'UI.
+ * Applique le principe de Ségrégation des Interfaces.
+ */
+const normaliserDonnee = (item, idPrefix, labelType) => {
+  const debut = new Date(item.date_debut);
+  const fin = item.date_fin ? new Date(item.date_fin) : null;
+  
+  return {
+    id: `${idPrefix}-${item.id}`,
+    apiId: item.id, // ID original pour les requêtes de détail
+    type: labelType,
+    titre: item.titre || item.poste || item.mission || 'Sans titre',
+    description: item.description || item.introduction || '',
+    
+    // Données temporelles pré-calculées
+    date_debut_obj: debut,
+    periode: fin 
+      ? `${debut.getFullYear()} - ${fin.getFullYear()}` 
+      : `${debut.getFullYear()} - En cours`,
+    
+    // Métadonnées spécifiques aux Projets
+    technologies: item.technologies || [],
+    video: item.media_video || null,
+    
+    // Payload complet pour les modales/détails
+    raw: item 
+  };
+};
 
-export const useAppStore = create((set, get) => ({
+export const useAppStore = create((set) => ({
+  // --- État Global ---
+  chargement: true,
+  erreur: null,
+
+  // --- Données Statiques (Intro) ---
   presentation: null,
   postes: [],
   diplomes: [],
   competences: [],
   sectionsCompetences: [],
-  evenementsChronologiques: [],
+
+  // --- Données Dynamiques (Listes) ---
+  parcours: [], // Contient : Formation, Service Civique, Freelance
+  projets: [],  // Contient : Etudiant, Perso, Freelance
+
+  // --- Actions ---
   
-  // Variables "Cache" pour éviter les boucles de rendu infinies
-  _cacheEvenementsFiltres: [],
-  _cacheCategories: ['Tous'],
-  
-  filtreActif: 'Tous',
-  chargementIntro: true,
-  chargementChronologie: true,
-  erreur: null,
-
-  // Action interne pour recalculer les données dérivées
-  // Cela garantit que les références des tableaux ne changent que si les données changent vraiment.
-  calculerDerives: () => {
-    const { evenementsChronologiques, filtreActif } = get();
-    
-    // 1. Calcul des catégories
-    let categories = ['Tous'];
-    if (evenementsChronologiques && evenementsChronologiques.length > 0) {
-      const types = evenementsChronologiques.map(e => e.type).filter(Boolean);
-      categories = ['Tous', ...[...new Set(types)].sort()];
-    }
-
-    // 2. Calcul du filtrage
-    let filtres = [];
-    if (evenementsChronologiques) {
-      if (filtreActif === 'Tous') {
-        filtres = evenementsChronologiques;
-      } else {
-        filtres = evenementsChronologiques.filter(evt => evt.type === filtreActif);
-      }
-    }
-
-    // Mise à jour du cache dans le store
-    set({ _cacheCategories: categories, _cacheEvenementsFiltres: filtres });
-  },
-
-  setFiltre: (nouveauFiltre) => {
-    set({ filtreActif: nouveauFiltre });
-    get().calculerDerives(); // Recalcule le cache après changement de filtre
-  },
-
-  // Les getters retournent maintenant les valeurs en cache (stables)
-  evenementsFiltres: () => get()._cacheEvenementsFiltres,
-  listeCategories: () => get()._cacheCategories,
-
   fetchAllData: async () => {
-    const { fetchIntro, fetchTimeline } = get();
-    set({ erreur: null });
+    set({ chargement: true, erreur: null });
     
     try {
-      await fetchIntro();
-      fetchTimeline(); 
-    } catch (e) {
-      console.error("Erreur critique chargement données:", e);
-      set({ erreur: "Impossible de charger le profil. Vérifiez la connexion API." });
-    }
-  },
-
-  fetchIntro: async () => {
-    set({ chargementIntro: true });
-    try {
+      // Exécution concurrente pour minimiser le temps de blocage réseau
       const [
-        responsePresentation, 
-        responsePostes, 
-        responseDiplomes, 
-        responseCompetences, 
-        responseSections
+        resPres, resPostes, resDiplomes, resCompt, resSectCompt,
+        resForm, resActiv, resServ, resProj
       ] = await Promise.all([
         clientApi.get('/presentations/'),
         clientApi.get('/postes/'),
         clientApi.get('/diplomes/'),
         clientApi.get('/competences/'),
         clientApi.get('/sections-competences/'),
-      ]);
-
-      set({
-        presentation: responsePresentation.data[0] || null,
-        postes: responsePostes.data,
-        diplomes: responseDiplomes.data,
-        competences: responseCompetences.data,
-        sectionsCompetences: responseSections.data,
-        chargementIntro: false,
-      });
-    } catch (error) {
-      console.error("Erreur fetchIntro:", error);
-      set({ chargementIntro: false, erreur: "Erreur lors du chargement de l'introduction." });
-      throw error; 
-    }
-  },
-
-  fetchTimeline: async () => {
-    set({ chargementChronologie: true });
-    try {
-      const [
-        responseFormations, 
-        responseActivites, 
-        responseServices, 
-        responseProjets
-      ] = await Promise.all([
         clientApi.get('/formations/'),
         clientApi.get('/activites-professionnelles/'),
         clientApi.get('/services-civiques/'),
         clientApi.get('/projets/'),
       ]);
 
-      const events = [
-        ...responseFormations.data.map(i => normaliserEvent(i, LABELS.FORMATION)),
-        ...responseActivites.data.map(i => normaliserEvent(i, LABELS.ACTIVITE, { poste: i.poste })),
-        ...responseServices.data.map(i => normaliserEvent(i, LABELS.SERVICE, { mission: i.mission })),
-        ...responseProjets.data.map(p => {
-            const typeLabel = CATEGORY_LABELS[p.categorie] || LABELS.PRO_PERSO;
-            return normaliserEvent(p, typeLabel);
+      // 1. Construction de la section PARCOURS
+      // Règles : Formation + Service Civique + Activité Freelance uniquement
+      const formations = resForm.data.map(i => normaliserDonnee(i, 'FORM', LABELS.FORMATION));
+      const services = resServ.data.map(i => normaliserDonnee(i, 'SERV', LABELS.SERVICE));
+      
+      const freelanceActivites = resActiv.data
+        .filter(a => a.type_contrat === 'FREELANCE')
+        .map(i => normaliserDonnee(i, 'FREE_ACT', LABELS.FREELANCE));
+
+      const listeParcours = [...formations, ...services, ...freelanceActivites]
+        .sort((a, b) => b.date_debut_obj - a.date_debut_obj); // Tri antéchronologique (plus récent en haut)
+
+      // 2. Construction de la section PROJETS
+      // Règles : Etudiant + Perso + Freelance uniquement (Exclusion PRO/Salarié)
+      const categoriesAutorisees = ['ETU', 'PERSO', 'FREELANCE'];
+      
+      const listeProjets = resProj.data
+        .filter(p => categoriesAutorisees.includes(p.categorie))
+        .map(p => {
+          const label = CATEGORY_LABELS[p.categorie] || LABELS.PROJET_PERSO;
+          return normaliserDonnee(p, 'PROJ', label);
         })
-      ];
+        .sort((a, b) => b.date_debut_obj - a.date_debut_obj);
 
-      events.sort((a, b) => new Date(b.date_debut) - new Date(a.date_debut));
+      // Mise à jour atomique du store
+      set({
+        presentation: resPres.data[0] || null,
+        postes: resPostes.data,
+        diplomes: resDiplomes.data,
+        competences: resCompt.data,
+        sectionsCompetences: resSectCompt.data,
+        parcours: listeParcours,
+        projets: listeProjets,
+        chargement: false
+      });
 
-      // Mise à jour des données brutes ET appel du calcul des dérivés
-      set({ evenementsChronologiques: events, chargementChronologie: false });
-      get().calculerDerives();
-
-    } catch (e) {
-      console.warn("Erreur chargement timeline:", e);
-      set({ chargementChronologie: false, evenementsChronologiques: [] });
-      get().calculerDerives(); // S'assure que le cache est vide mais propre
+    } catch (error) {
+      console.error("Erreur critique store:", error);
+      set({ 
+        erreur: "Impossible de charger les données. Vérifiez la connexion API.", 
+        chargement: false 
+      });
     }
-  },
+  }
 }));
