@@ -1,57 +1,77 @@
-// frontend/src/config.js
+// [Symbole Commentaire] FICHIER : frontend/src/config.js
 
-// Libellés constants pour éviter les fautes de frappe et centraliser les clés
 export const LABELS = {
+  // Parcours
   FORMATION: 'Formation',
-  ACTIVITE: 'Activité rémunératrice',
-  SERVICE: 'Service civique',
-  PRO_PRO: 'Projets Professionnels',
-  PRO_ETU: 'Projets Etudiant',
-  PRO_PERSO: 'Projets Personnels'
+  SERVICE: 'Service Civique',
+  FREELANCE: 'Freelance',
+  SALARIE: 'Expérience Salariée', // Présent en base, à filtrer selon besoins
+
+  // Projets
+  PROJET_ETU: 'Projet Étudiant',
+  PROJET_PERSO: 'Projet Personnel',
+  PROJET_FREELANCE: 'Projet Freelance',
+  PROJET_PRO: 'Projet Professionnel', // Présent en base, à filtrer selon besoins
 };
 
-// Mapping Catégorie Backend -> Label Frontend
+// Mapping : Valeur Backend (Projet.categorie) -> Label Frontend
 export const CATEGORY_LABELS = {
-  'PRO': LABELS.PRO_PRO,
-  'ETU': LABELS.PRO_ETU,
-  'PERSO': LABELS.PRO_PERSO
+  'ETU': LABELS.PROJET_ETU,
+  'PERSO': LABELS.PROJET_PERSO,
+  'FREELANCE': LABELS.PROJET_FREELANCE,
+  'PRO': LABELS.PROJET_PRO
 };
 
+// Mapping : Valeur Backend (ActiviteProfessionnelle.type_contrat) -> Label Frontend
+export const CONTRACT_LABELS = {
+  'FREELANCE': LABELS.FREELANCE,
+  'SALARIE': LABELS.SALARIE
+};
+
+// Liste exhaustive pour typage et itérations
 export const TYPES_EVENEMENTS = [
   LABELS.FORMATION,
-  LABELS.ACTIVITE,
   LABELS.SERVICE,
-  LABELS.PRO_PRO,
-  LABELS.PRO_ETU,
-  LABELS.PRO_PERSO
+  LABELS.FREELANCE,
+  LABELS.SALARIE,
+  LABELS.PROJET_ETU,
+  LABELS.PROJET_PERSO,
+  LABELS.PROJET_FREELANCE,
+  LABELS.PROJET_PRO
 ];
 
-// Couleurs (Format RGBA pour les graphiques/fonds)
+// Configuration des couleurs (RGBA) pour fonds et graphiques
 export const COULEURS_TYPES_RGBA = {
-  [LABELS.FORMATION]: 'rgba(2, 136, 209, 0.7)',
-  [LABELS.ACTIVITE]: 'rgba(237, 108, 2, 0.7)',
-  [LABELS.SERVICE]: 'rgba(156, 39, 176, 0.7)',
-  [LABELS.PRO_PRO]: 'rgba(46, 125, 50, 0.7)',
-  [LABELS.PRO_ETU]: 'rgba(102, 187, 106, 0.7)',
-  [LABELS.PRO_PERSO]: 'rgba(76, 175, 80, 0.7)',
+  [LABELS.FORMATION]: 'rgba(2, 136, 209, 0.15)',      // Light Blue
+  [LABELS.SERVICE]: 'rgba(156, 39, 176, 0.15)',        // Purple
+  [LABELS.FREELANCE]: 'rgba(255, 152, 0, 0.15)',       // Orange
+  [LABELS.SALARIE]: 'rgba(97, 97, 97, 0.15)',          // Grey (Legacy)
+  [LABELS.PROJET_ETU]: 'rgba(76, 175, 80, 0.15)',      // Green
+  [LABELS.PROJET_PERSO]: 'rgba(0, 150, 136, 0.15)',    // Teal
+  [LABELS.PROJET_FREELANCE]: 'rgba(255, 193, 7, 0.15)',// Amber
+  [LABELS.PROJET_PRO]: 'rgba(69, 90, 100, 0.15)',      // Blue Grey (Legacy)
 };
 
-// Mappage pour les composants MUI (Chip, Alert, etc.)
+// Configuration des variantes MUI (Chip, Alert)
 export const COULEURS_TYPES_MUI = {
   [LABELS.FORMATION]: 'info',
-  [LABELS.ACTIVITE]: 'warning',
   [LABELS.SERVICE]: 'secondary',
-  [LABELS.PRO_PRO]: 'success',
-  [LABELS.PRO_ETU]: 'success',
-  [LABELS.PRO_PERSO]: 'success',
+  [LABELS.FREELANCE]: 'warning',
+  [LABELS.SALARIE]: 'default',
+  [LABELS.PROJET_ETU]: 'success',
+  [LABELS.PROJET_PERSO]: 'success',
+  [LABELS.PROJET_FREELANCE]: 'warning',
+  [LABELS.PROJET_PRO]: 'default',
 };
 
-// Couleurs (Format HEX pour les bordures/textes)
+// Configuration des couleurs (HEX) pour bordures et textes
 export const COULEURS_TYPES_HEX = {
   [LABELS.FORMATION]: '#0288d1',
-  [LABELS.ACTIVITE]: '#ed6c02',
   [LABELS.SERVICE]: '#9c27b0',
-  [LABELS.PRO_PRO]: '#2e7d32',
-  [LABELS.PRO_ETU]: '#66bb6a',
-  [LABELS.PRO_PERSO]: '#4caf50',
+  [LABELS.FREELANCE]: '#ed6c02',
+  [LABELS.SALARIE]: '#616161',
+  [LABELS.PROJET_ETU]: '#2e7d32',
+  [LABELS.PROJET_PERSO]: '#009688',
+  [LABELS.PROJET_FREELANCE]: '#ffb300',
+  [LABELS.PROJET_PRO]: '#455a64',
 };
