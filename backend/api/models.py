@@ -1,3 +1,5 @@
+# FICHIER : backend/api/models.py
+
 from django.db import models
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
@@ -113,14 +115,28 @@ class Formation(BaseEvenement):
         return self.titre
 
 class ActiviteProfessionnelle(BaseEvenement):
+    # Extension du modèle pour inclure le statut Freelance sans rupture de schéma
+    TYPE_CONTRAT = [
+        ('SALARIE', 'Salarié (CDI/CDD)'),
+        ('FREELANCE', 'Freelance / Indépendant'),
+    ]
+    
     poste = models.CharField(max_length=255)
+    
+    # Champ ajouté avec valeur par défaut pour compatibilité descendante
+    type_contrat = models.CharField(
+        max_length=20, 
+        choices=TYPE_CONTRAT, 
+        default='SALARIE',
+        verbose_name="Type de Contrat"
+    )
 
     class Meta(BaseEvenement.Meta):
         verbose_name = "Activité Pro"
         verbose_name_plural = "Activités Pro"
 
     def __str__(self):
-        return self.poste
+        return f"[{self.get_type_contrat_display()}] {self.poste}"
 
 class ServiceCivique(BaseEvenement):
     mission = models.CharField(max_length=255)
@@ -140,6 +156,7 @@ class Projet(BaseEvenement):
         ('PRO', 'Professionnel'),
         ('ETU', 'Étudiant'),
         ('PERSO', 'Personnel'),
+        ('FREELANCE', 'Projet Freelance'), # Nouvelle catégorie
     ]
 
     categorie = models.CharField(max_length=10, choices=CATEGORIES, default='PERSO')
