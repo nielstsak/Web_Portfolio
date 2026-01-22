@@ -1,4 +1,7 @@
+# [Symbole Commentaire] FICHIER : backend/api/views.py
+
 from rest_framework import viewsets, permissions
+from django_filters.rest_framework import DjangoFilterBackend
 from .models import (
     Presentation, PosteCible, Diplome, CompetenceTechnologique, SectionCompetence,
     Formation, ActiviteProfessionnelle, ServiceCivique, Projet
@@ -11,11 +14,16 @@ from .serializers import (
 )
 
 class BaseReadOnlyViewSet(viewsets.ReadOnlyModelViewSet):
-    """ViewSet de base optimisé pour la lecture seule publique."""
+    """
+    ViewSet abstrait pour l'accès en lecture seule (GET).
+    Autorise l'accès public, mais restreint les modifications aux utilisateurs authentifiés (Admin).
+    Intègre par défaut le backend de filtrage Django.
+    """
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    filter_backends = [DjangoFilterBackend]
 
 class PresentationViewSet(BaseReadOnlyViewSet):
-    queryset = Presentation.objects.all()
+    queryset = Presentation.objects.prefetch_related('details').all()
     serializer_class = PresentationSerializer
 
 class PosteCibleViewSet(BaseReadOnlyViewSet):
@@ -31,6 +39,7 @@ class CompetenceTechnologiqueViewSet(BaseReadOnlyViewSet):
     serializer_class = CompetenceTechnologiqueSerializer
 
 class SectionCompetenceViewSet(BaseReadOnlyViewSet):
+    # Optimisation SQL : Récupère les compétences liées en une seule requête
     queryset = SectionCompetence.objects.prefetch_related('competences').all()
     serializer_class = SectionCompetenceSerializer
 
@@ -41,12 +50,16 @@ class FormationViewSet(BaseReadOnlyViewSet):
 class ActiviteProfessionnelleViewSet(BaseReadOnlyViewSet):
     queryset = ActiviteProfessionnelle.objects.prefetch_related('details').all()
     serializer_class = ActiviteProfessionnelleSerializer
+    # Permet de filtrer par 'SALARIE' ou 'FREELANCE' via l'API
+    filterset_fields = ['type_contrat']
 
 class ServiceCiviqueViewSet(BaseReadOnlyViewSet):
     queryset = ServiceCivique.objects.prefetch_related('details').all()
     serializer_class = ServiceCiviqueSerializer
 
 class ProjetViewSet(BaseReadOnlyViewSet):
+    # Eager loading des relations complexes pour éviter le problème N+1
     queryset = Projet.objects.prefetch_related('details', 'media_photos', 'technologies').all()
     serializer_class = ProjetSerializer
-    filterset_fields = ['categorie'] 
+    # Permet de filtrer par catégorie (ex: 'FREELANCE', 'ETU')
+    filterset_fields = ['categorie']

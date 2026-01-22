@@ -1,10 +1,10 @@
-// frontend/src/components/AnimatedBackground.jsx
+// [Symbole Commentaire] FICHIER : frontend/src/components/AnimatedBackground.jsx
 
 import { useRef, useEffect } from 'react';
 
 /**
- * Affiche un arrière-plan animé interactif optimisé.
- * S'arrête lorsque la page n'est pas visible et limite les FPS.
+ * Arrière-plan animé interactif optimisé.
+ * Exécution sur le Main Thread avec limitation de charge.
  */
 const AnimatedBackground = () => {
   const refCanevas = useRef(null);
@@ -12,95 +12,112 @@ const AnimatedBackground = () => {
     souris: { x: -1000, y: -1000 },
     points: [],
     derniereFrame: 0,
+    largeur: 0,
+    hauteur: 0,
   });
 
-  // Paramètres de configuration
-  const FPS_LIMITE = 30; // Limite à 30 FPS pour économiser la batterie/CPU
+  // Configuration de performance
+  const FPS_LIMITE = 30;
   const INTERVALLE_MS = 1000 / FPS_LIMITE;
-  const TAILLE_GRILLE = 25; // Plus grand = moins de points = plus performant
+  
+  // Paramètres géométriques
+  const RAYON_BASE = 1;
+  const RAYON_MAX = 3.5;
+  const RAYON_INFLUENCE = 180;
+  const RAYON_INFLUENCE_SQ = RAYON_INFLUENCE * RAYON_INFLUENCE; // Pré-calcul pour éviter Math.sqrt
 
   useEffect(() => {
     const canevas = refCanevas.current;
     if (!canevas) return;
     
-    // Gestion DPI pour netteté sur écrans Retina
-    const dpr = window.devicePixelRatio || 1;
-    const contexte = canevas.getContext('2d');
+    const contexte = canevas.getContext('2d', { alpha: true }); // Alpha activé pour la transparence
     let idAnimation;
+    let timeoutResize;
+
+    // Détermine la densité de la grille selon la puissance du device (taille d'écran comme proxy)
+    const obtenirTailleGrille = () => {
+      return window.innerWidth < 768 ? 45 : 25; // Moins de points sur mobile
+    };
 
     const configurerGrille = () => {
       const largeur = window.innerWidth;
       const hauteur = window.innerHeight;
+      const dpr = window.devicePixelRatio || 1;
 
-      // Ajustement de la résolution du canvas
+      // Mise à l'échelle DPI
       canevas.width = largeur * dpr;
       canevas.height = hauteur * dpr;
       canevas.style.width = `${largeur}px`;
       canevas.style.height = `${hauteur}px`;
       
       contexte.scale(dpr, dpr);
+      
+      // Mise à jour de l'état interne
+      refEtat.current.largeur = largeur;
+      refEtat.current.hauteur = hauteur;
 
-      refEtat.current.points = [];
-      const colonnes = Math.ceil(largeur / TAILLE_GRILLE);
-      const rangees = Math.ceil(hauteur / TAILLE_GRILLE);
+      const tailleGrille = obtenirTailleGrille();
+      const colonnes = Math.ceil(largeur / tailleGrille);
+      const rangees = Math.ceil(hauteur / tailleGrille);
+      
+      // Réinitialisation et peuplement des points (Tableau plat pour itération rapide)
+      const points = new Float32Array(colonnes * rangees * 2); // x, y entrelacés
+      let index = 0;
 
       for (let i = 0; i < colonnes; i++) {
         for (let j = 0; j < rangees; j++) {
-          refEtat.current.points.push({
-            x: i * TAILLE_GRILLE + TAILLE_GRILLE / 2,
-            y: j * TAILLE_GRILLE + TAILLE_GRILLE / 2
-          });
+          points[index] = i * tailleGrille + tailleGrille / 2;
+          points[index + 1] = j * tailleGrille + tailleGrille / 2;
+          index += 2;
         }
       }
+      refEtat.current.points = points;
     };
 
     const dessinerScene = () => {
-      const width = window.innerWidth;
-      const height = window.innerHeight;
+      const { largeur, hauteur, points, souris } = refEtat.current;
       
-      contexte.clearRect(0, 0, width, height);
-      contexte.fillStyle = 'rgba(0, 0, 0, 0.85)';
+      contexte.clearRect(0, 0, largeur, hauteur);
+      contexte.fillStyle = 'rgba(0, 0, 0, 0.85)'; // Couleur des points
       
-      const { points, souris } = refEtat.current;
-      const rayonBase = 1;
-      const rayonMax = 3.5;
-      const rayonInfluence = 180; 
+      contexte.beginPath(); // Batch path drawing
 
-      // Optimisation : Utiliser une boucle for classique plus rapide que forEach
-      for (let i = 0, len = points.length; i < len; i++) {
-        const point = points[i];
-        const deltaX = point.x - souris.x;
-        const deltaY = point.y - souris.y;
+      for (let i = 0; i < points.length; i += 2) {
+        const px = points[i];
+        const py = points[i + 1];
         
-        // Optimisation : Distance au carré pour éviter Math.sqrt coûteux si hors zone
-        const distCarree = deltaX * deltaX + deltaY * deltaY;
-        const influenceCarree = rayonInfluence * rayonInfluence;
+        const dx = px - souris.x;
+        const dy = py - souris.y;
+        
+        // Optimisation : Comparaison de distance au carré (évite Math.sqrt coûteux)
+        const distSq = dx * dx + dy * dy;
+        
+        let rayon = RAYON_BASE;
 
-        let rayon = rayonBase;
-
-        if (distCarree < influenceCarree) {
-          // Calcul précis uniquement si dans la zone d'influence
-          const distance = Math.sqrt(distCarree);
-          const attenuation = 1 - (distance / rayonInfluence);
-          // Formule quadratique pour adoucir la transition
-          rayon = rayonBase + (rayonMax - rayonBase) * (attenuation * attenuation);
+        if (distSq < RAYON_INFLUENCE_SQ) {
+          // Calcul coûteux uniquement si nécessaire (dans la zone d'influence)
+          const dist = Math.sqrt(distSq);
+          const facteur = 1 - (dist / RAYON_INFLUENCE);
+          // Fonction d'atténuation quadratique (plus douce)
+          rayon = RAYON_BASE + (RAYON_MAX - RAYON_BASE) * (facteur * facteur);
         }
 
-        contexte.beginPath();
-        // Optimisation : Math.round pour éviter l'anti-aliasing sub-pixel inutile
-        contexte.arc(Math.round(point.x), Math.round(point.y), rayon, 0, 2 * Math.PI);
-        contexte.fill();
+        // Dessin du point
+        contexte.moveTo(px + rayon, py);
+        contexte.arc(px, py, rayon, 0, 2 * Math.PI);
       }
+      
+      contexte.fill();
     };
 
     const boucleAnimation = (timestamp) => {
-      // 1. Vérifier si l'onglet est visible
+      // 1. Coupe-circuit si l'onglet est inactif
       if (document.hidden) {
         idAnimation = requestAnimationFrame(boucleAnimation);
         return;
       }
 
-      // 2. Limiter les FPS
+      // 2. Throttling des FPS
       const delta = timestamp - refEtat.current.derniereFrame;
       if (delta > INTERVALLE_MS) {
         refEtat.current.derniereFrame = timestamp - (delta % INTERVALLE_MS);
@@ -110,8 +127,10 @@ const AnimatedBackground = () => {
       idAnimation = requestAnimationFrame(boucleAnimation);
     };
 
-    // --- Listeners ---
+    // --- Gestionnaires d'événements ---
+    
     const gererMouvementSouris = (e) => {
+      // Mise à jour directe de la ref sans déclencher de re-render React
       refEtat.current.souris.x = e.clientX;
       refEtat.current.souris.y = e.clientY;
     };
@@ -121,27 +140,30 @@ const AnimatedBackground = () => {
       refEtat.current.souris.y = -1000;
     };
 
-    // Debounce sur le resize pour performance
-    let timeoutResize;
     const gererRedimensionnement = () => {
       clearTimeout(timeoutResize);
-      timeoutResize = setTimeout(configurerGrille, 150);
+      timeoutResize = setTimeout(() => {
+        configurerGrille();
+        dessinerScene(); // Redessin immédiat après resize
+      }, 150);
     };
 
-    // Init
+    // Initialisation
     configurerGrille();
     idAnimation = requestAnimationFrame(boucleAnimation);
 
-    window.addEventListener('mousemove', gererMouvementSouris);
-    window.addEventListener('resize', gererRedimensionnement);
+    // Attachement des écouteurs
+    window.addEventListener('mousemove', gererMouvementSouris, { passive: true });
+    window.addEventListener('resize', gererRedimensionnement, { passive: true });
     document.addEventListener('mouseleave', gererSortieSouris);
 
+    // Nettoyage
     return () => {
       cancelAnimationFrame(idAnimation);
+      clearTimeout(timeoutResize);
       window.removeEventListener('mousemove', gererMouvementSouris);
       window.removeEventListener('resize', gererRedimensionnement);
       document.removeEventListener('mouseleave', gererSortieSouris);
-      clearTimeout(timeoutResize);
     };
   }, []);
 
@@ -155,7 +177,7 @@ const AnimatedBackground = () => {
         width: '100%',
         height: '100%',
         zIndex: -1,
-        pointerEvents: 'none', // Laisse passer les clics au contenu en dessous
+        pointerEvents: 'none',
       }}
     />
   );
