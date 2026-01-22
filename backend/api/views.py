@@ -50,7 +50,6 @@ class FormationViewSet(BaseReadOnlyViewSet):
 class ActiviteProfessionnelleViewSet(BaseReadOnlyViewSet):
     queryset = ActiviteProfessionnelle.objects.prefetch_related('details').all()
     serializer_class = ActiviteProfessionnelleSerializer
-    # Permet de filtrer par 'SALARIE' ou 'FREELANCE' via l'API
     filterset_fields = ['type_contrat']
 
 class ServiceCiviqueViewSet(BaseReadOnlyViewSet):
@@ -58,8 +57,6 @@ class ServiceCiviqueViewSet(BaseReadOnlyViewSet):
     serializer_class = ServiceCiviqueSerializer
 
 class ProjetViewSet(BaseReadOnlyViewSet):
-    # Eager loading des relations complexes pour éviter le problème N+1
     queryset = Projet.objects.prefetch_related('details', 'media_photos', 'technologies').all()
     serializer_class = ProjetSerializer
-    # Permet de filtrer par catégorie (ex: 'FREELANCE', 'ETU')
     filterset_fields = ['categorie']
