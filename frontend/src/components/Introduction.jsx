@@ -52,7 +52,7 @@ function Introduction() {
         <Grid container spacing={4} alignItems="stretch">
           
           {/* Colonne Gauche : Identité & Bio */}
-          <Grid item size={{ xs: 12, md: 7 }}>
+          <Grid item size={{ xs: 12, md: 8 }}>
             <SectionPaper>
               <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 600 }}>
                 Présentation
@@ -78,7 +78,7 @@ function Introduction() {
           </Grid>
           
           {/* Colonne Droite : Compétences & Diplômes */}
-          <Grid item size={{ xs: 12, md: 5 }}>
+          <Grid item size={{ xs: 12, md: 4 }}>
             <SectionPaper>
               <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 600 }}>
                 Compétences & Cursus

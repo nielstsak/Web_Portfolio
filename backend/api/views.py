@@ -39,7 +39,6 @@ class CompetenceTechnologiqueViewSet(BaseReadOnlyViewSet):
     serializer_class = CompetenceTechnologiqueSerializer
 
 class SectionCompetenceViewSet(BaseReadOnlyViewSet):
-    # Optimisation SQL : Récupère les compétences liées en une seule requête
     queryset = SectionCompetence.objects.prefetch_related('competences').all()
     serializer_class = SectionCompetenceSerializer
 
