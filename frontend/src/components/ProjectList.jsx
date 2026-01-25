@@ -190,33 +190,53 @@ function ProjectList({ projets, onSelectionnerProjet }) {
   }
 
   return (
-    <Box sx={{ width: '100%', py: 8, px: { xs: 2, md: 4 } }}>
-      <Typography 
-        variant="h3" 
-        component="h2" 
-        sx={{ mb: 6, textAlign: 'center', fontWeight: 800, letterSpacing: '-0.5px' }}
-      >
-        Réalisations
-      </Typography>
+      <Box sx={{ width: '100%', py: 8, px: { xs: 2, md: 4 } }}>
+        
+        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 6 }}>
+          <Paper
+            elevation={3}
+            sx={{
+              px: 6,
+              py: 2,
+              borderRadius: 4,
+              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+            }}
+          >
+            <Typography 
+              variant="h3" 
+              component="h2" 
+              sx={{ 
+                fontWeight: 800, 
+                letterSpacing: '-0.5px',
+                textAlign: 'center',
+                m: 0
+              }}
+            >
+              Réalisations
+            </Typography>
+          </Paper>
+        </Box>
 
-      <motion.div
-        variants={variantsConteneur}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-50px" }}
-      >
-        <Masonry columns={{ xs: 1, sm: 2, lg: 3 }} spacing={4}>
-          {projets.map((projet) => (
-            <CarteProjet 
-              key={projet.id} 
-              projet={projet} 
-              onSelectionner={onSelectionnerProjet} 
-            />
-          ))}
-        </Masonry>
-      </motion.div>
-    </Box>
-  );
-}
+        <motion.div
+          variants={variantsConteneur}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-50px" }}
+        >
+          <Masonry columns={{ xs: 1, sm: 2, lg: 3 }} spacing={4}>
+            {projets.map((projet) => (
+              <CarteProjet 
+                key={projet.id} 
+                projet={projet} 
+                onSelectionner={onSelectionnerProjet} 
+              />
+            ))}
+          </Masonry>
+        </motion.div>
+      </Box>
+    );
+  }
 
-export default ProjectList;  
+  export default ProjectList;
