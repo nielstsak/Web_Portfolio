@@ -1,8 +1,7 @@
 // [Symbole Commentaire] FICHIER : frontend/src/components/ProjectList.jsx
 
 import { useRef, useCallback } from 'react';
-import { Box, Card, CardContent, Typography, Chip, IconButton, CardMedia, Avatar } from '@mui/material';
-import { Masonry } from '@mui/lab';
+import { Box, Card, CardContent, Typography, Chip, IconButton, CardMedia, Avatar, Paper } from '@mui/material';import { Masonry } from '@mui/lab';
 import { motion } from 'framer-motion';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { LABELS, COULEURS_TYPES_MUI } from '../config';
