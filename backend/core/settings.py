@@ -1,10 +1,8 @@
-# backend/core/settings.py
-
 import os
 import socket
 from pathlib import Path
-from dotenv import load_dotenv 
-import dj_database_url 
+from dotenv import load_dotenv
+import dj_database_url
 
 socket.setdefaulttimeout(300)
 load_dotenv()
@@ -27,19 +25,19 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
-    'whitenoise.runserver_nostatic', 
+    'whitenoise.runserver_nostatic',
     "django.contrib.staticfiles",
-    'rest_framework', 
-    'corsheaders', 
-    'api', 
-    'cloudinary_storage', 
+    'rest_framework',
+    'corsheaders',
+    'api',
+    'cloudinary_storage',
     'cloudinary',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware', 
-    'corsheaders.middleware.CorsMiddleware', 
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -81,18 +79,23 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",},
 ]
 
-LANGUAGE_CODE = "fr-fr" 
+LANGUAGE_CODE = "fr-fr"
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173", 
+    "http://localhost:5173",
 ]
+
 URL_FRONTEND_VERCEL = os.environ.get('VERCEL_FRONTEND_URL')
 if URL_FRONTEND_VERCEL:
     CORS_ALLOWED_ORIGINS.append(URL_FRONTEND_VERCEL)
+
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://web-portfolio.*\.vercel\.app$",
+]
 
 STATIC_URL = "static/"
 STATIC_ROOT = REPERTOIRE_BASE / "staticfiles"
@@ -119,5 +122,5 @@ CLOUDINARY_STORAGE = {
         'webm': 'video',
     }
 }
-MEDIA_URL = '/media/' 
 
+MEDIA_URL = '/media/'
