@@ -1,20 +1,28 @@
-// frontend/src/components/introduction/SkillsDisplay.jsx
-
-import { Box, Typography, List, ListItem, ListItemText, Tooltip, Divider } from '@mui/material';
+import { useState } from 'react';
+import { Box, Typography, List, ListItem, ListItemText, Tooltip, Divider, Modal, Fade, IconButton } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import { motion } from 'framer-motion';
 import { useAppStore } from '../../store/appStore';
 
-/**
- * Affiche les diplômes et la grille de logos de compétences.
- * Connecté au store global.
- */
 const AffichageCompetences = () => {
   const diplomes = useAppStore((state) => state.diplomes);
   const sectionsCompetences = useAppStore((state) => state.sectionsCompetences);
+  
+  const [diplomeSelectionne, setDiplomeSelectionne] = useState(null);
+
+  const ouvrirDiplome = (diplome) => {
+    if (diplome.parchemin) {
+      setDiplomeSelectionne(diplome);
+    }
+  };
+
+  const fermerDiplome = () => {
+    setDiplomeSelectionne(null);
+  };
 
   return (
     <>
-      {/* Section Diplômes */}
       {diplomes.length > 0 && (
         <>
           <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: 'text.secondary', textTransform: 'uppercase', fontSize: '0.75rem', mt: 1 }}>
@@ -22,11 +30,27 @@ const AffichageCompetences = () => {
           </Typography>
           <List dense>
             {diplomes.map((diplome) => (
-              <ListItem key={diplome.id} sx={{ px: 0 }}>
+              <ListItem 
+                key={diplome.id} 
+                sx={{ 
+                  px: 0, 
+                  cursor: diplome.parchemin ? 'pointer' : 'default',
+                  '&:hover .MuiTypography-primary': {
+                    color: diplome.parchemin ? 'primary.main' : 'inherit',
+                    textDecoration: diplome.parchemin ? 'underline' : 'none'
+                  }
+                }}
+                onClick={() => ouvrirDiplome(diplome)}
+              >
                 <ListItemText 
-                  primary={diplome.titre} 
+                  primary={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      {diplome.titre}
+                      {diplome.parchemin && <VisibilityIcon fontSize="inherit" color="action" sx={{ opacity: 0.7 }} />}
+                    </Box>
+                  } 
                   secondary={diplome.institution}
-                  primaryTypographyProps={{ fontWeight: 500 }}
+                  primaryTypographyProps={{ fontWeight: 500, transition: 'color 0.2s' }}
                 />
               </ListItem>
             ))}
@@ -35,7 +59,6 @@ const AffichageCompetences = () => {
         </>
       )}
 
-      {/* Section Compétences Techniques */}
       <Box sx={{ mt: 2 }}>
         {sectionsCompetences.map((section) => (
           <Box key={section.id} sx={{ mb: 3 }}>
@@ -74,6 +97,49 @@ const AffichageCompetences = () => {
           </Box>
         ))}
       </Box>
+
+      <Modal
+        open={!!diplomeSelectionne}
+        onClose={fermerDiplome}
+        closeAfterTransition
+        BackdropProps={{
+          timeout: 500,
+          sx: { backgroundColor: 'rgba(0, 0, 0, 0.85)' }
+        }}
+        sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+      >
+        <Fade in={!!diplomeSelectionne}>
+          <Box sx={{ position: 'relative', maxWidth: '90vw', maxHeight: '90vh', outline: 'none' }}>
+            <IconButton 
+              onClick={fermerDiplome}
+              sx={{ 
+                position: 'absolute', 
+                top: -40, 
+                right: -10, 
+                color: 'white',
+                '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' }
+              }}
+            >
+              <CloseIcon fontSize="large" />
+            </IconButton>
+
+            {diplomeSelectionne && (
+              <Box
+                component="img"
+                src={diplomeSelectionne.parchemin}
+                alt={`Diplôme ${diplomeSelectionne.titre}`}
+                sx={{
+                  maxWidth: '100%',
+                  maxHeight: '85vh',
+                  borderRadius: 1,
+                  boxShadow: 24,
+                  display: 'block'
+                }}
+              />
+            )}
+          </Box>
+        </Fade>
+      </Modal>
     </>
   );
 };

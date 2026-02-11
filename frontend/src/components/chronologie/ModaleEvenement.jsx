@@ -1,5 +1,4 @@
-// frontend/src/components/chronologie/ModaleEvenement.jsx
-
+import { useEffect } from 'react';
 import { 
   Box, Modal, Paper, Typography, IconButton, Divider, 
   Chip, Link, List, ListItem, ListItemIcon, ListItemText, Button, Avatar
@@ -9,7 +8,6 @@ import CodeIcon from '@mui/icons-material/Code';
 import ArticleIcon from '@mui/icons-material/Article';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useEffect } from 'react'; // AJOUTÉ
 
 const styleContenuModale = {
   width: { xs: '95%', md: '80%', lg: '60%' },
@@ -49,12 +47,14 @@ const AffichageMissions = ({ items, titre }) => {
     </Box>
   );
 };
-const AffichageSpecificites = ({ type, specificites }) => {
 
-  if (type.startsWith('Projets')) {
+const AffichageSpecificites = ({ type, specificites }) => {
+  if (!specificites) return null;
+
+  if (type.startsWith('Projet')) {
     const { 
       institution, role, technologies, media_video, 
-      media_photos, url_code_source, travail_effectue
+      media_photos, de_source, travail_effectue
     } = specificites;
     
     return (
@@ -89,25 +89,24 @@ const AffichageSpecificites = ({ type, specificites }) => {
           </Box>
         )}
 
-        {(media_video || media_photos?.length > 0) && (
+        {(media_video || (media_photos && media_photos.length > 0)) && (
           <Box sx={{ my: 2 }}>
             <Typography variant="h6" gutterBottom>Média</Typography>
-            {media_video && (
+            {media_video ? (
               <Box 
                 component="video" 
                 src={media_video} 
                 controls 
                 muted 
                 playsInline 
-                sx={{ width: '100%', borderRadius: 1, backgroundColor: '#000' }} 
+                sx={{ width: '100%', borderRadius: 1, backgroundColor: '#000', maxHeight: '400px' }} 
               />
-            )}
-            {media_photos?.length > 0 && !media_video && (
+            ) : (
                <Box 
                 component="img" 
                 src={media_photos[0].image} 
                 alt={media_photos[0].legende || "Aperçu projet"} 
-                sx={{ width: '100%', borderRadius: 1 }} 
+                sx={{ width: '100%', borderRadius: 1, maxHeight: '400px', objectFit: 'contain' }} 
               />
             )}
           </Box>
@@ -115,10 +114,10 @@ const AffichageSpecificites = ({ type, specificites }) => {
 
         <AffichageMissions items={travail_effectue} titre="Travail Détaillé" />
 
-        {url_code_source && (
+        {de_source && (
           <Button 
             variant="outlined" 
-            href={url_code_source} 
+            href={de_source} 
             target="_blank" 
             rel="noopener" 
             startIcon={<CodeIcon />}
@@ -154,6 +153,7 @@ const AffichageSpecificites = ({ type, specificites }) => {
         </Box>
       );
       
+    case 'Service Civique':
     case 'Service civique':
        return (
         <Box>
@@ -165,6 +165,8 @@ const AffichageSpecificites = ({ type, specificites }) => {
       );
       
     case 'Activité rémunératrice':
+    case 'Expérience Salariée':
+    case 'Freelance':
       return (
         <Box>
           <List dense>
@@ -179,21 +181,18 @@ const AffichageSpecificites = ({ type, specificites }) => {
   }
 };
 
-
 function ModaleEvenement({ evenement, ouvert, onFermer }) {
-  // AJOUTÉ: Logique de verrouillage du défilement du corps 
   useEffect(() => {
-    // Scroll lock logic
     if (ouvert) {
       document.body.classList.add('scroll-lock');
     } else {
       document.body.classList.remove('scroll-lock');
     }
-    // Cleanup function
     return () => {
       document.body.classList.remove('scroll-lock');
     };
   }, [ouvert]);
+
   if (!evenement) return null;
 
   return (
@@ -201,7 +200,6 @@ function ModaleEvenement({ evenement, ouvert, onFermer }) {
       open={ouvert}
       onClose={onFermer}
       closeAfterTransition
-      
       disableScrollLock={true} 
       BackdropProps={{
         sx: {
@@ -213,7 +211,6 @@ function ModaleEvenement({ evenement, ouvert, onFermer }) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        // AJOUTÉ: Permet le défilement si la modale elle-même dépasse le viewport
         overflowY: 'auto',
       }}
     >
@@ -249,7 +246,7 @@ function ModaleEvenement({ evenement, ouvert, onFermer }) {
               
               <AffichageSpecificites 
                 type={evenement.type} 
-                specificites={evenement.specificites} 
+                specificites={evenement.raw} 
               />
             </Box>
           </Paper>
